@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:idb_shim/idb.dart' as idb;
+import 'package:idb_shim/idb_io.dart' as idb_io;
 import 'package:first_app/models/transaction.dart';
 import 'package:first_app/summary_page.dart';
 import 'package:first_app/add_transaction_page.dart';
-import 'package:first_app/transaction_history.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -12,16 +11,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Box<Transaction>? _transactionsBox;
+  final String _transactionsKey = "transactions";
+  List<Transaction> _transactions = [];
 
   @override
   void initState() {
     super.initState();
-    _openTransactionsBox();
+    _loadTransactions();
   }
 
-  Future<void> _openTransactionsBox() async {
-    _transactionsBox = await Hive.openBox<Transaction>('transactions');
+  Future<void> _loadTransactions() async {
+    print("Loading transactions...");
+    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
+    idb.Database db = await idbFactory.open('transaction_db', version: 1,
+        onUpgradeNeeded: (idb.VersionChangeEvent event) {
+      idb.Database db = event.database;
+      db.createObjectStore(_transactionsKey);
+    });
+    idb.ObjectStore store = db
+        .transaction(_transactionsKey, idb.idbModeReadOnly)
+        .objectStore(_transactionsKey);
+    List<dynamic> transactionsList = await store.getAll();
+
+    _transactions = transactionsList
+        .map((transactionJson) => Transaction.fromJson(transactionJson))
+        .toList();
+    print("Transactions loaded successfully: $_transactions");
+    setState(() {});
+
+    db.close();
+  }
+
+  void _saveTransactions() async {
+    print("Saving transactions...");
+    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
+    idb.Database db = await idbFactory.open('transaction_db', version: 1,
+        onUpgradeNeeded: (idb.VersionChangeEvent event) {
+      idb.Database db = event.database;
+      db.createObjectStore(_transactionsKey);
+    });
+    idb.ObjectStore store = db
+        .transaction(_transactionsKey, idb.idbModeReadWrite)
+        .objectStore(_transactionsKey);
+    await store.clear();
+    _transactions.forEach((transaction) async {
+      await store.put(transaction.toJson());
+    });
+    print("Transactions saved successfully: $_transactions");
+
+    db.close();
   }
 
   void _addNewTransaction(String title, double amount, String category) {
@@ -34,7 +72,9 @@ class _HomePageState extends State<HomePage> {
     );
 
     setState(() {
-      _transactionsBox!.add(newTx);
+      _transactions.add(newTx);
+      _saveTransactions();
+      print("Transaction added successfully: $newTx");
     });
   }
 
@@ -48,41 +88,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _openTransactionsBox(),
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return ValueListenableBuilder(
-            valueListenable: _transactionsBox!.listenable(),
-            builder: (context, Box<Transaction> box, _) {
-              return Scaffold(
-                appBar: AppBar(
-                  title: Text('Personal Finance Manager'),
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () => _openAddTransaction(context),
-                    ),
-                  ],
-                ),
-                body: SummaryPage(box.values.toList()),
-              );
-            },
-          );
-        } else {
-          // Show a loading indicator while waiting for the box to open
-          return Scaffold(
-            appBar: AppBar(title: Text('Personal Finance Manager')),
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Personal Finance Manager'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _openAddTransaction(context),
+          ),
+        ],
+      ),
+      body: SummaryPage(_transactions),
     );
-  }
-
-  @override
-  void dispose() {
-    Hive.close();
-    super.dispose();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:first_app/models/transaction.dart';
 import 'package:intl/intl.dart';
@@ -54,6 +53,8 @@ class _SummaryPageState extends State<SummaryPage> {
     });
   }
 
+  int _currentPage = 0;
+
   @override
   Widget build(BuildContext context) {
     Map<String, double> categoryTotals = _categoryTotal(transactions);
@@ -63,8 +64,8 @@ class _SummaryPageState extends State<SummaryPage> {
         SliverPersistentHeader(
           pinned: true,
           delegate: SummaryHeader(
-            minHeight: MediaQuery.of(context).size.width / 2.5,
-            maxHeight: MediaQuery.of(context).size.width / 2.5,
+            minHeight: MediaQuery.of(context).size.width / 2,
+            maxHeight: MediaQuery.of(context).size.width / 2,
             child: Stack(
               children: [
                 Positioned(
@@ -186,53 +187,96 @@ class _SummaryPageState extends State<SummaryPage> {
                   left: MediaQuery.of(context).size.width / 2.5 + 20,
                   child: Container(
                     height: MediaQuery.of(context).size.height -
-                        // MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.top -
                         MediaQuery.of(context).padding.bottom - // Add this line
                         140,
                     width: MediaQuery.of(context).size.width / 2,
                     child: ListView.builder(
-                      itemCount: transactions.length,
+                      itemCount: ((_currentPage + 1) * 10 < transactions.length)
+                          ? 10
+                          : (transactions.length % 10),
                       itemBuilder: (BuildContext context, int index) {
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 4.0),
-                          padding: EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Colors.grey.withOpacity(0.3)),
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  transactions[index].title,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                        int actualIndex = _currentPage * 10 + index;
+                        if (actualIndex < transactions.length) {
+                          int trueIndex = index + _currentPage * 10;
+                          // Display transaction
+                          return Container(
+                            margin: EdgeInsets.symmetric(vertical: 4.0),
+                            padding: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: Colors.grey.withOpacity(0.3)),
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    transactions[trueIndex].title,
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  transactions[index].category,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    transactions[trueIndex].category,
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  DateFormat.yMMMd()
-                                      .format(transactions[index].date),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    DateFormat.yMMMd()
+                                        .format(transactions[trueIndex].date),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  '\$${transactions[index].amount.toStringAsFixed(2)}',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    '\$${transactions[trueIndex].amount.toStringAsFixed(2)}',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
+                              ],
+                            ),
+                          );
+                        } else {
+                          // Display empty row
+                          return null;
+                        }
                       },
                     ),
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).size.width / 2.5 - 100,
+                  left: MediaQuery.of(context).size.width / 2.5 + 20,
+                  child: Row(
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () {
+                          if (_currentPage > 0) {
+                            setState(() {
+                              _currentPage--;
+                            });
+                          }
+                        },
+                        child: Icon(Icons.arrow_back),
+                      ),
+                      SizedBox(width: 10),
+                      FloatingActionButton(
+                        onPressed: () {
+                          if ((_currentPage + 1) * 10 < transactions.length) {
+                            setState(() {
+                              _currentPage++;
+                            });
+                          }
+                        },
+                        child: Icon(Icons.arrow_forward),
+                      ),
+                    ],
                   ),
                 ),
               ],
