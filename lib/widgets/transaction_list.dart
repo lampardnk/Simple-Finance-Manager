@@ -5,8 +5,10 @@ import 'package:first_app/models/transaction.dart'; // import your transaction m
 class TransactionList extends StatelessWidget {
   final List<Transaction> transactions;
   final int _currentPage;
+  final Function editTransaction; // new property
 
-  TransactionList(this.transactions, this._currentPage);
+  TransactionList(
+      this.transactions, this._currentPage, this.editTransaction); // updated
 
   @override
   Widget build(BuildContext context) {
@@ -14,11 +16,11 @@ class TransactionList extends StatelessWidget {
       height: MediaQuery.of(context).size.height -
           MediaQuery.of(context).padding.top -
           MediaQuery.of(context).padding.bottom -
-          280,
+          290,
       width: MediaQuery.of(context).size.width / 2,
       child: ListView.builder(
         itemBuilder: (BuildContext context, int index) {
-          int actualIndex = _currentPage * 10 + index;
+          int actualIndex = _currentPage * 6 + index;
           if (actualIndex < transactions.length) {
             // Display transaction
             return Container(
@@ -53,6 +55,11 @@ class TransactionList extends StatelessWidget {
                       '\$${transactions[actualIndex].amount.toStringAsFixed(2)}',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () => editTransaction(
+                        transactions[actualIndex]), // edit button
                   ),
                 ],
               ),

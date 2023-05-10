@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pie_chart/pie_chart.dart';
 import 'package:first_app/models/transaction.dart';
-import 'package:intl/intl.dart';
+
+import 'keys.dart';
 
 import 'widgets/transaction_list.dart';
 import 'widgets/category_pie_chart.dart';
@@ -81,13 +81,14 @@ class _SummaryPageState extends State<SummaryPage> {
                 //List of transactions
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 40,
-                  left: MediaQuery.of(context).size.width / 2.5 + 20,
-                  child: TransactionList(transactions, _currentPage),
+                  left: MediaQuery.of(context).size.width / 2.5 + 90,
+                  child: TransactionList(transactions, _currentPage,
+                      homePageKey.currentState!.editTransaction),
                 ),
                 //Pagination buttons
                 Positioned(
                   top: MediaQuery.of(context).size.width / 2.5 + 40,
-                  left: MediaQuery.of(context).size.width / 2.5 + 20,
+                  left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Row(
                     children: [
                       FloatingActionButton(
@@ -105,7 +106,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       FloatingActionButton(
                         heroTag: 'Right',
                         onPressed: () {
-                          if ((_currentPage + 1) * 10 < transactions.length) {
+                          if ((_currentPage + 1) * 6 < transactions.length) {
                             setState(() {
                               _currentPage++;
                             });
@@ -119,7 +120,7 @@ class _SummaryPageState extends State<SummaryPage> {
                 //Total
                 Positioned(
                   top: 0,
-                  left: MediaQuery.of(context).size.width / 2.5 + 20,
+                  left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Text(
                     'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)}',
                     style: TextStyle(

@@ -4,13 +4,17 @@ import 'package:idb_shim/idb_io.dart' as idb_io;
 import 'package:first_app/models/transaction.dart';
 import 'package:first_app/summary_page.dart';
 import 'package:first_app/add_transaction_page.dart';
+import 'package:first_app/edit_transaction_page.dart';
+import 'keys.dart';
 
 class HomePage extends StatefulWidget {
+  HomePage() : super(key: homePageKey);
+
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   final String _transactionsKey = "transactions";
   List<Transaction> _transactions = [];
 
@@ -89,12 +93,13 @@ class _HomePageState extends State<HomePage> {
     db.close();
   }
 
-  void _addNewTransaction(String title, double amount, String category) {
+  void _addNewTransaction(
+      String title, double amount, String category, DateTime dt) {
     final newTx = Transaction(
       id: DateTime.now().toString(),
       title: title,
       amount: amount,
-      date: DateTime.now(),
+      date: dt,
       category: category,
     );
 
@@ -110,6 +115,32 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(
           builder: (context) => AddTransactionPage(_addNewTransaction)),
+    );
+  }
+
+  void editTransaction(Transaction transaction) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionPage(
+          transaction: transaction,
+          editTransaction: (id, newTitle, newAmount, newCategory, newDate) {
+            final newTx = Transaction(
+              id: id,
+              title: newTitle,
+              amount: newAmount,
+              date: newDate,
+              category: newCategory,
+            );
+            setState(() {
+              _transactions.removeWhere((transaction) => transaction.id == id);
+              _transactions.add(newTx);
+              _saveTransactions();
+              print("Transaction edited successfully: $newTx");
+            });
+          },
+        ),
+      ),
     );
   }
 

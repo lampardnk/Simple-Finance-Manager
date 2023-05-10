@@ -21,6 +21,7 @@ class CategoryPieChart extends StatelessWidget {
                 Colors.blue,
                 Colors.yellow,
                 Colors.orange,
+                Colors.purple,
               ],
               initialAngleInDegree: 0,
               chartType: ChartType.disc,

@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:first_app/models/transaction.dart';
 
-class AddTransactionPage extends StatefulWidget {
-  final Function addTransaction;
+class EditTransactionPage extends StatefulWidget {
+  final Transaction transaction;
+  final Function editTransaction;
 
-  AddTransactionPage(this.addTransaction);
+  EditTransactionPage(
+      {required this.transaction, required this.editTransaction});
 
   @override
-  _AddTransactionPageState createState() => _AddTransactionPageState();
+  _EditTransactionPageState createState() => _EditTransactionPageState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> {
+class _EditTransactionPageState extends State<EditTransactionPage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   String _selectedCategory = 'Food';
   DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController.text = widget.transaction.title;
+    _amountController.text = widget.transaction.amount.toString();
+    _selectedCategory = widget.transaction.category;
+    _selectedDate = widget.transaction.date;
+  }
 
   void _submitData() {
     if (_amountController.text.isEmpty) {
@@ -29,7 +41,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       return;
     }
 
-    widget.addTransaction(
+    widget.editTransaction(
+      widget.transaction.id,
       enteredTitle,
       enteredAmount,
       enteredCategory,
