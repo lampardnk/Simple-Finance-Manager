@@ -3,6 +3,10 @@ import 'package:pie_chart/pie_chart.dart';
 import 'package:first_app/models/transaction.dart';
 import 'package:intl/intl.dart';
 
+import 'widgets/transaction_list.dart';
+import 'widgets/category_pie_chart.dart';
+import 'widgets/sort_menu_button.dart';
+
 class SummaryPage extends StatefulWidget {
   final List<Transaction> transactions;
   SummaryPage(this.transactions);
@@ -68,190 +72,21 @@ class _SummaryPageState extends State<SummaryPage> {
             maxHeight: MediaQuery.of(context).size.width / 2,
             child: Stack(
               children: [
+                //category_pie_chart
                 Positioned(
                   top: 0,
                   left: 0,
-                  child: Container(
-                    height: MediaQuery.of(context).size.width / 2.5,
-                    child: categoryTotals.isNotEmpty
-                        ? PieChart(
-                            dataMap: categoryTotals,
-                            animationDuration: Duration(milliseconds: 800),
-                            chartRadius:
-                                MediaQuery.of(context).size.width / 3.2,
-                            colorList: [
-                              Colors.red,
-                              Colors.green,
-                              Colors.blue,
-                              Colors.yellow,
-                              Colors.orange,
-                            ],
-                            initialAngleInDegree: 0,
-                            chartType: ChartType.disc,
-                            ringStrokeWidth: 32,
-                            centerText: "Categories",
-                            legendOptions: LegendOptions(
-                              showLegendsInRow: false,
-                              legendPosition: LegendPosition.right,
-                              showLegends: true,
-                              legendTextStyle:
-                                  TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            chartValuesOptions: ChartValuesOptions(
-                              showChartValueBackground: true,
-                              showChartValues: true,
-                              showChartValuesInPercentage: true,
-                              showChartValuesOutside: false,
-                            ),
-                          )
-                        : Center(
-                            child: Text(
-                              'No transactions yet',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                  ),
+                  child: CategoryPieChart(categoryTotals: categoryTotals),
                 ),
-                Positioned(
-                  top: 0,
-                  left: MediaQuery.of(context).size.width / 2.5 + 20,
-                  child: Text(
-                    'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: PopupMenuButton<String>(
-                    onSelected: (String value) {
-                      switch (value) {
-                        case 'Name':
-                          _sortByName();
-                          break;
-                        case 'Category':
-                          _sortByCategory();
-                          break;
-                        case 'Date Ascending':
-                          _sortByDate(ascending: true);
-                          break;
-                        case 'Date Descending':
-                          _sortByDate(ascending: false);
-                          break;
-                        case 'Amount Ascending':
-                          _sortByAmount(ascending: true);
-                          break;
-                        case 'Amount Descending':
-                          _sortByAmount(ascending: false);
-                          break;
-                      }
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return [
-                        PopupMenuItem<String>(
-                          value: 'Name',
-                          child: Text('Sort by Name'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'Category',
-                          child: Text('Sort by Category'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'Date Ascending',
-                          child: Text('Sort by Date (Ascending)'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'Date Descending',
-                          child: Text('Sort by Date (Descending)'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'Amount Ascending',
-                          child: Text('Sort by Amount (Ascending)'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'Amount Descending',
-                          child: Text('Sort by Amount (Descending)'),
-                        ),
-                      ];
-                    },
-                  ),
-                ),
+                //List of transactions
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 20,
-                  child: Container(
-                    height: MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom - // Add this line
-                        140,
-                    width: MediaQuery.of(context).size.width / 2,
-                    child: ListView.builder(
-                      itemCount: ((_currentPage + 1) * 10 < transactions.length)
-                          ? 10
-                          : (transactions.length % 10),
-                      itemBuilder: (BuildContext context, int index) {
-                        int actualIndex = _currentPage * 10 + index;
-                        if (actualIndex < transactions.length) {
-                          int trueIndex = index + _currentPage * 10;
-                          // Display transaction
-                          return Container(
-                            margin: EdgeInsets.symmetric(vertical: 4.0),
-                            padding: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: Colors.grey.withOpacity(0.3)),
-                              borderRadius: BorderRadius.circular(4.0),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    transactions[trueIndex].title,
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    transactions[trueIndex].category,
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    DateFormat.yMMMd()
-                                        .format(transactions[trueIndex].date),
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    '\$${transactions[trueIndex].amount.toStringAsFixed(2)}',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          // Display empty row
-                          return null;
-                        }
-                      },
-                    ),
-                  ),
+                  child: TransactionList(transactions, _currentPage),
                 ),
+                //Pagination buttons
                 Positioned(
-                  top: MediaQuery.of(context).size.width / 2.5 - 100,
+                  top: MediaQuery.of(context).size.width / 2.5 + 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 20,
                   child: Row(
                     children: [
@@ -279,6 +114,47 @@ class _SummaryPageState extends State<SummaryPage> {
                         child: Icon(Icons.arrow_forward),
                       ),
                     ],
+                  ),
+                ),
+                //Total
+                Positioned(
+                  top: 0,
+                  left: MediaQuery.of(context).size.width / 2.5 + 20,
+                  child: Text(
+                    'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                //sort_menu_button
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: SortMenuButton(
+                    onSelected: (String value) {
+                      switch (value) {
+                        case 'Name':
+                          _sortByName();
+                          break;
+                        case 'Category':
+                          _sortByCategory();
+                          break;
+                        case 'Date Ascending':
+                          _sortByDate(ascending: true);
+                          break;
+                        case 'Date Descending':
+                          _sortByDate(ascending: false);
+                          break;
+                        case 'Amount Ascending':
+                          _sortByAmount(ascending: true);
+                          break;
+                        case 'Amount Descending':
+                          _sortByAmount(ascending: false);
+                          break;
+                      }
+                    },
                   ),
                 ),
               ],
