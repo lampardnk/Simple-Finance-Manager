@@ -2,7 +2,3 @@
 {"key":"store_transactions","value":{"name":"transactions"}}
 {"key":"stores","value":["transactions"]}
 {"key":"version","value":1}
-{"key":"2023-05-10 09:54:11.479433","store":"transactions","value":{"id":"2023-05-10 09:54:11.479433","title":"test","amount":1.0,"date":"2023-05-10T09:54:11.481434","category":"test"}}
-{"key":"2023-05-10 09:54:25.463843","store":"transactions","value":{"id":"2023-05-10 09:54:25.463843","title":"test","amount":2.0,"date":"2023-05-10T09:54:25.463843","category":"test"}}
-{"key":"2023-05-10 09:54:54.587440","store":"transactions","value":{"id":"2023-05-10 09:54:54.587440","title":"test","amount":3.0,"date":"2023-05-10T09:54:54.588445","category":"test"}}
-{"key":"2023-05-10 10:38:44.725043","store":"transactions","value":{"id":"2023-05-10 10:38:44.725043","title":"test","amount":1.0,"date":"2023-05-10T10:38:44.725043","category":"test"}}
