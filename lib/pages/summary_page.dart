@@ -16,6 +16,7 @@ class SummaryPage extends StatefulWidget {
 
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
+
   Map<String, double> _categoryTotal(List<Transaction> transactions) {
     Map<String, double> categoryTotals = {};
 
@@ -58,6 +59,8 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 
   int _currentPage = 0;
+  bool _isHoveringLeft = true; // define here
+  bool _isHoveringRight = true;
 
   @override
   Widget build(BuildContext context) {
@@ -94,32 +97,70 @@ class _SummaryPageState extends State<SummaryPage> {
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Row(
                     children: [
-                      FloatingActionButton(
-                        heroTag: 'Left',
-                        onPressed: () {
-                          if (_currentPage > 0) {
+                      AnimatedContainer(
+                        height: 60,
+                        width: 60,
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color:
+                              _isHoveringLeft ? Colors.green[400] : Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: InkWell(
+                          onHover: (value) {
                             setState(() {
-                              _currentPage--;
+                              _isHoveringLeft = value;
                             });
-                          }
-                        },
-                        child: Icon(Icons.arrow_back),
+                          },
+                          onTap: () {
+                            if (_currentPage > 0) {
+                              setState(() {
+                                _currentPage--;
+                              });
+                            }
+                          },
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
                       ),
                       SizedBox(width: 10),
-                      FloatingActionButton(
-                        heroTag: 'Right',
-                        onPressed: () {
-                          if ((_currentPage + 1) * 5 < transactions.length) {
+                      AnimatedContainer(
+                        height: 60,
+                        width: 60,
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: _isHoveringRight
+                              ? Colors.green[400]
+                              : Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: InkWell(
+                          onHover: (value) {
                             setState(() {
-                              _currentPage++;
+                              _isHoveringRight = value;
                             });
-                          }
-                        },
-                        child: Icon(Icons.arrow_forward),
+                          },
+                          onTap: () {
+                            if ((_currentPage + 1) * 5 < transactions.length) {
+                              setState(() {
+                                _currentPage++;
+                              });
+                            }
+                          },
+                          child: Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
+
                 //Total
                 Positioned(
                   top: 40,
