@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:idb_shim/idb.dart' as idb;
 import 'package:idb_shim/idb_io.dart' as idb_io;
-import 'package:first_app/models/transaction.dart';
-import 'package:first_app/summary_page.dart';
-import 'package:first_app/add_transaction_page.dart';
-import 'package:first_app/edit_transaction_page.dart';
+import '/models/transaction.dart';
+import 'pages/summary_page.dart';
+import 'pages/add_transaction_page.dart';
+import '/pages/edit_transaction_page.dart';
 import 'keys.dart';
 
 class HomePage extends StatefulWidget {
@@ -144,14 +144,45 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  void deleteTransaction(Transaction transaction) {
+    String id = transaction.id;
+    final deletedTransaction =
+        _transactions.firstWhere((transaction) => transaction.id == id);
+    setState(() {
+      _transactions.remove(deletedTransaction);
+      _saveTransactions();
+      print("Transaction deleted successfully: $id");
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${deletedTransaction.title} has been deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            // Undo the deletion
+            setState(() {
+              _transactions.add(deletedTransaction);
+              _saveTransactions();
+              print("Transaction restored successfully: $id");
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Personal Finance Manager'),
+        title: Text('Personal Finance Manager - beta 1.1.5'),
         actions: [
           IconButton(
             icon: Icon(Icons.add),
+            onPressed: () => _openAddTransaction(context),
+          ),
+          IconButton(
+            icon: Icon(Icons.account_balance_wallet),
             onPressed: () => _openAddTransaction(context),
           ),
         ],

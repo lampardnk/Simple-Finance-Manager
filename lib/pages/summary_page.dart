@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:first_app/models/transaction.dart';
 
-import 'keys.dart';
+import '../keys.dart';
 
-import 'widgets/transaction_list.dart';
-import 'widgets/category_pie_chart.dart';
-import 'widgets/sort_menu_button.dart';
+import '../widgets/transaction_list.dart';
+import '../widgets/category_pie_chart.dart';
+import '../widgets/sort_menu_button.dart';
 
 class SummaryPage extends StatefulWidget {
   final List<Transaction> transactions;
@@ -80,14 +80,17 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //List of transactions
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + 40,
+                  top: MediaQuery.of(context).padding.top + 80,
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
-                  child: TransactionList(transactions, _currentPage,
-                      homePageKey.currentState!.editTransaction),
+                  child: TransactionList(
+                      transactions,
+                      _currentPage,
+                      homePageKey.currentState!.editTransaction,
+                      homePageKey.currentState!.deleteTransaction),
                 ),
                 //Pagination buttons
                 Positioned(
-                  top: MediaQuery.of(context).size.width / 2.5 + 40,
+                  top: MediaQuery.of(context).size.width / 2.5 - 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Row(
                     children: [
@@ -106,7 +109,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       FloatingActionButton(
                         heroTag: 'Right',
                         onPressed: () {
-                          if ((_currentPage + 1) * 6 < transactions.length) {
+                          if ((_currentPage + 1) * 5 < transactions.length) {
                             setState(() {
                               _currentPage++;
                             });
@@ -119,10 +122,10 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //Total
                 Positioned(
-                  top: 0,
+                  top: 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Text(
-                    'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)}',
+                    'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)} (${transactions.length} Transactions)',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -156,6 +159,15 @@ class _SummaryPageState extends State<SummaryPage> {
                           break;
                       }
                     },
+                  ),
+                ),
+                //Page count
+                Positioned(
+                  top: MediaQuery.of(context).size.width / 2.5 - 40,
+                  left: MediaQuery.of(context).size.width / 2.5 + 90 + 150,
+                  child: Text(
+                    "Page: ${_currentPage + 1} / ${transactions.length % 6 == 0 ? transactions.length ~/ 6 : (transactions.length ~/ 6) + 1}",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
