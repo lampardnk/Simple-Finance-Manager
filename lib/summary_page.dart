@@ -256,6 +256,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: Row(
                     children: [
                       FloatingActionButton(
+                        heroTag: 'Left',
                         onPressed: () {
                           if (_currentPage > 0) {
                             setState(() {
@@ -267,6 +268,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       ),
                       SizedBox(width: 10),
                       FloatingActionButton(
+                        heroTag: 'Right',
                         onPressed: () {
                           if ((_currentPage + 1) * 10 < transactions.length) {
                             setState(() {

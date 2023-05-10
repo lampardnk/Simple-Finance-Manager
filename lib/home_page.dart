@@ -45,18 +45,45 @@ class _HomePageState extends State<HomePage> {
   void _saveTransactions() async {
     print("Saving transactions...");
     idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
-    idb.Database db = await idbFactory.open('transaction_db', version: 1,
-        onUpgradeNeeded: (idb.VersionChangeEvent event) {
-      idb.Database db = event.database;
-      db.createObjectStore(_transactionsKey);
-    });
-    idb.ObjectStore store = db
-        .transaction(_transactionsKey, idb.idbModeReadWrite)
-        .objectStore(_transactionsKey);
+    print("Got idbFactory: $idbFactory");
+
+    idb.Database? db;
+
+    try {
+      db = await idbFactory.open('transaction_db', version: 1,
+          onUpgradeNeeded: (idb.VersionChangeEvent event) {
+        idb.Database db = event.database;
+        db.createObjectStore(_transactionsKey);
+      });
+      print("Opened database: $db");
+    } catch (e) {
+      print("Error opening database: $e");
+    }
+
+    if (db == null) {
+      print("Database is null, cannot save transactions");
+      return;
+    }
+
+    // Start a new transaction for write operations.
+    idb.Transaction transaction =
+        db.transaction(_transactionsKey, idb.idbModeReadWrite);
+    print("Started transaction: $transaction");
+    idb.ObjectStore store = transaction.objectStore(_transactionsKey);
+    print("Got object store: $store");
+
+    // Clear the store first.
     await store.clear();
-    _transactions.forEach((transaction) async {
-      await store.put(transaction.toJson());
-    });
+    print("Cleared store");
+
+    // Then save all the transactions in a single batch.
+    for (Transaction transaction in _transactions) {
+      await store.put(transaction.toJson(), transaction.id);
+    }
+    print("Saved transactions");
+
+    // Wait for the transaction to complete.
+    await transaction.completed;
     print("Transactions saved successfully: $_transactions");
 
     db.close();
