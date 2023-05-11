@@ -53,6 +53,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     }
   }
 
+  bool _isHoveringUp = false;
+  bool _isHoveringDown = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,14 +99,48 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
             SizedBox(height: 16),
             Text("Selected date: ${DateFormat('yMMMd').format(_selectedDate)}"),
             SizedBox(height: 16),
-            ElevatedButton(
-              child: Text('Select Date'),
-              onPressed: () => _selectDate(context),
+            MouseRegion(
+              onHover: (event) => setState(() => _isHoveringUp = true),
+              onExit: (event) => setState(() => _isHoveringUp = false),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                child: Transform.scale(
+                  scale: _isHoveringUp ? 1.1 : 1.0,
+                  child: ElevatedButton(
+                    onPressed: () => _selectDate(context),
+                    child: Text('Select Date'),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                        _isHoveringUp
+                            ? Colors.green
+                            : Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitData,
-              child: Text('Add Transaction'),
+            SizedBox(height: 10),
+            MouseRegion(
+              onHover: (event) => setState(() => _isHoveringDown = true),
+              onExit: (event) => setState(() => _isHoveringDown = false),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                child: Transform.scale(
+                  scale: _isHoveringDown ? 1.1 : 1.0,
+                  child: ElevatedButton(
+                    onPressed: _submitData,
+                    child: Text('Add Transaction'),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                        _isHoveringDown
+                            ? Colors.green
+                            : Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

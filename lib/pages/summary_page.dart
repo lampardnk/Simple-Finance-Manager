@@ -59,8 +59,10 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 
   int _currentPage = 0;
-  bool _isHoveringLeft = true; // define here
-  bool _isHoveringRight = true;
+  int _pageLength = 10;
+
+  bool _isHoveringLeft = false; // define here
+  bool _isHoveringRight = false;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +90,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: TransactionList(
                       transactions,
                       _currentPage,
+                      _pageLength,
                       homePageKey.currentState!.editTransaction,
                       homePageKey.currentState!.deleteTransaction),
                 ),
@@ -144,7 +147,8 @@ class _SummaryPageState extends State<SummaryPage> {
                             });
                           },
                           onTap: () {
-                            if ((_currentPage + 1) * 5 < transactions.length) {
+                            if ((_currentPage + 1) * _pageLength <
+                                transactions.length) {
                               setState(() {
                                 _currentPage++;
                               });
@@ -160,7 +164,6 @@ class _SummaryPageState extends State<SummaryPage> {
                     ],
                   ),
                 ),
-
                 //Total
                 Positioned(
                   top: 40,
@@ -175,8 +178,8 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //sort_menu_button
                 Positioned(
-                  top: 0,
-                  right: 0,
+                  top: 35,
+                  right: 25,
                   child: SortMenuButton(
                     onSelected: (String value) {
                       switch (value) {
@@ -207,7 +210,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   top: MediaQuery.of(context).size.width / 2.5 - 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90 + 150,
                   child: Text(
-                    "Page: ${_currentPage + 1} / ${transactions.length % 6 == 0 ? transactions.length ~/ 6 : (transactions.length ~/ 6) + 1}",
+                    "Page: ${_currentPage + 1} / ${transactions.length % _pageLength == 0 ? transactions.length ~/ _pageLength : (transactions.length ~/ _pageLength) + 1}",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),

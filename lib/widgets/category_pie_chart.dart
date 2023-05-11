@@ -6,6 +6,15 @@ class CategoryPieChart extends StatelessWidget {
 
   CategoryPieChart({required this.categoryTotals});
 
+  final Map<String, Color> categoryColors = {
+    'Food': Colors.red,
+    'Entertainment': Colors.green,
+    'Healthcare': Colors.blue,
+    'Utilities': Colors.yellow,
+    'Shopping': Colors.orange,
+    'Others': Colors.purple,
+  };
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -15,14 +24,9 @@ class CategoryPieChart extends StatelessWidget {
               dataMap: categoryTotals,
               animationDuration: Duration(milliseconds: 800),
               chartRadius: MediaQuery.of(context).size.width / 3.2,
-              colorList: [
-                Colors.red,
-                Colors.green,
-                Colors.blue,
-                Colors.yellow,
-                Colors.orange,
-                Colors.purple,
-              ],
+              colorList: categoryTotals.keys
+                  .map((key) => categoryColors[key] ?? Colors.grey)
+                  .toList(),
               initialAngleInDegree: 0,
               chartType: ChartType.disc,
               ringStrokeWidth: 32,
