@@ -11,6 +11,7 @@ class EditButton extends StatefulWidget {
 
 class _EditButtonState extends State<EditButton> {
   bool _isHoveringEdit = false;
+  Function get editTransaction => widget.editTransaction;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class _EditButtonState extends State<EditButton> {
         borderRadius: BorderRadius.circular(5.0),
         color: _isHoveringEdit ? Colors.blue : Colors.transparent,
         child: InkWell(
-          onTap: () => widget.editTransaction(),
+          onTap: () => editTransaction(),
           child: Icon(Icons.edit,
               color: _isHoveringEdit ? Colors.white : Colors.black),
         ),

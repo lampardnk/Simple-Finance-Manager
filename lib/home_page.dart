@@ -82,6 +82,7 @@ class HomePageState extends State<HomePage> {
 
     // Then save all the transactions in a single batch.
     for (Transaction transaction in _transactions) {
+      await store.delete(transaction.id);
       await store.put(transaction.toJson(), transaction.id);
     }
     print("Saved transactions");
@@ -94,9 +95,9 @@ class HomePageState extends State<HomePage> {
   }
 
   void _addNewTransaction(
-      String title, double amount, String category, DateTime dt) {
+      String id, String title, double amount, String category, DateTime dt) {
     final newTx = Transaction(
-      id: DateTime.now().toString(),
+      id: id,
       title: title,
       amount: amount,
       date: dt,
@@ -133,12 +134,12 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void editTransaction(Transaction transaction) {
+  void editTransaction(Transaction fT) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditTransactionPage(
-          transaction: transaction,
+          transaction: fT,
           editTransaction: (id, newTitle, newAmount, newCategory, newDate) {
             final newTx = Transaction(
               id: id,
@@ -159,8 +160,8 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void deleteTransaction(Transaction transaction) {
-    String id = transaction.id;
+  void deleteTransaction(Transaction fT) {
+    String id = fT.id;
     final deletedTransaction =
         _transactions.firstWhere((transaction) => transaction.id == id);
     setState(() {

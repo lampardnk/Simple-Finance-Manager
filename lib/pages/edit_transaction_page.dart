@@ -19,13 +19,16 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
   String _selectedCategory = 'Food';
   DateTime _selectedDate = DateTime.now();
 
+  Transaction get transaction => widget.transaction;
+  Function get editTransaction => widget.editTransaction;
+
   @override
   void initState() {
     super.initState();
-    _titleController.text = widget.transaction.title;
-    _amountController.text = widget.transaction.amount.toString();
-    _selectedCategory = widget.transaction.category;
-    _selectedDate = widget.transaction.date;
+    _titleController.text = transaction.title;
+    _amountController.text = transaction.amount.toString();
+    _selectedCategory = transaction.category;
+    _selectedDate = transaction.date;
   }
 
   void _submitData() {
@@ -41,8 +44,8 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
       return;
     }
 
-    widget.editTransaction(
-      widget.transaction.id,
+    editTransaction(
+      transaction.id,
       enteredTitle,
       enteredAmount,
       enteredCategory,
