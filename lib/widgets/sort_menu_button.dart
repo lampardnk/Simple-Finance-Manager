@@ -8,6 +8,7 @@ class SortMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
+      icon: Icon(Icons.sort_by_alpha_outlined),
       onSelected: onSelected,
       itemBuilder: (BuildContext context) {
         return [

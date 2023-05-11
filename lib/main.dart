@@ -14,6 +14,8 @@ class MyApp extends StatelessWidget {
       title: 'Personal Finance Manager',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        splashColor: Colors.transparent,
+        hoverColor: Colors.transparent,
       ),
       home: HomePage(),
       debugShowCheckedModeBanner: false,

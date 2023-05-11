@@ -16,6 +16,7 @@ class SummaryPage extends StatefulWidget {
 
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
+
   Map<String, double> _categoryTotal(List<Transaction> transactions) {
     Map<String, double> categoryTotals = {};
 
@@ -58,6 +59,10 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 
   int _currentPage = 0;
+  int _pageLength = 10;
+
+  bool _isHoveringLeft = false; // define here
+  bool _isHoveringRight = false;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +90,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: TransactionList(
                       transactions,
                       _currentPage,
+                      _pageLength,
                       homePageKey.currentState!.editTransaction,
                       homePageKey.currentState!.deleteTransaction),
                 ),
@@ -94,28 +100,66 @@ class _SummaryPageState extends State<SummaryPage> {
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Row(
                     children: [
-                      FloatingActionButton(
-                        heroTag: 'Left',
-                        onPressed: () {
-                          if (_currentPage > 0) {
+                      AnimatedContainer(
+                        height: 60,
+                        width: 60,
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color:
+                              _isHoveringLeft ? Colors.green[400] : Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: InkWell(
+                          onHover: (value) {
                             setState(() {
-                              _currentPage--;
+                              _isHoveringLeft = value;
                             });
-                          }
-                        },
-                        child: Icon(Icons.arrow_back),
+                          },
+                          onTap: () {
+                            if (_currentPage > 0) {
+                              setState(() {
+                                _currentPage--;
+                              });
+                            }
+                          },
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
                       ),
                       SizedBox(width: 10),
-                      FloatingActionButton(
-                        heroTag: 'Right',
-                        onPressed: () {
-                          if ((_currentPage + 1) * 5 < transactions.length) {
+                      AnimatedContainer(
+                        height: 60,
+                        width: 60,
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: _isHoveringRight
+                              ? Colors.green[400]
+                              : Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: InkWell(
+                          onHover: (value) {
                             setState(() {
-                              _currentPage++;
+                              _isHoveringRight = value;
                             });
-                          }
-                        },
-                        child: Icon(Icons.arrow_forward),
+                          },
+                          onTap: () {
+                            if ((_currentPage + 1) * _pageLength <
+                                transactions.length) {
+                              setState(() {
+                                _currentPage++;
+                              });
+                            }
+                          },
+                          child: Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -134,8 +178,8 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //sort_menu_button
                 Positioned(
-                  top: 0,
-                  right: 0,
+                  top: 35,
+                  right: 25,
                   child: SortMenuButton(
                     onSelected: (String value) {
                       switch (value) {
@@ -166,7 +210,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   top: MediaQuery.of(context).size.width / 2.5 - 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90 + 150,
                   child: Text(
-                    "Page: ${_currentPage + 1} / ${transactions.length % 6 == 0 ? transactions.length ~/ 6 : (transactions.length ~/ 6) + 1}",
+                    "Page: ${_currentPage + 1} / ${transactions.length % _pageLength == 0 ? transactions.length ~/ _pageLength : (transactions.length ~/ _pageLength) + 1}",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),

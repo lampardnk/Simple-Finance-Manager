@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:first_app/models/transaction.dart'; // import your transaction model
 
-class TransactionList extends StatelessWidget {
+import 'delete_button.dart';
+import 'edit_button.dart';
+import '../models/transaction.dart'; // import your transaction model
+
+class TransactionList extends StatefulWidget {
   final List<Transaction> transactions;
   final int _currentPage;
+  final int _pageLength;
   final Function editTransaction;
   final Function deleteTransaction; // new property
 
-  TransactionList(this.transactions, this._currentPage, this.editTransaction,
-      this.deleteTransaction); // updated
+  TransactionList(this.transactions, this._currentPage, this._pageLength,
+      this.editTransaction, this.deleteTransaction); // updated
 
+  @override
+  _TransactionListState createState() => _TransactionListState();
+}
+
+class _TransactionListState extends State<TransactionList> {
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height -
           MediaQuery.of(context).padding.top -
           MediaQuery.of(context).padding.bottom -
-          320,
+          350, //Higher value shorter list
       width: MediaQuery.of(context).size.width / 2,
       child: Column(
         children: [
@@ -46,8 +55,9 @@ class TransactionList extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               itemBuilder: (BuildContext context, int index) {
-                int actualIndex = _currentPage * 5 + index;
-                if (actualIndex < transactions.length) {
+                int actualIndex =
+                    widget._currentPage * widget._pageLength + index;
+                if (actualIndex < widget.transactions.length) {
                   // Display transaction
                   return Container(
                     margin: EdgeInsets.symmetric(vertical: 4.0),
@@ -62,34 +72,33 @@ class TransactionList extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                            child: Text(transactions[actualIndex].title,
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        Expanded(
-                            child: Text(transactions[actualIndex].category,
+                            child: Text(widget.transactions[actualIndex].title,
                                 style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
                             child: Text(
-                                DateFormat.yMMMd()
-                                    .format(transactions[actualIndex].date),
+                                widget.transactions[actualIndex].category,
                                 style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
                             child: Text(
-                                '\$${transactions[actualIndex].amount.toStringAsFixed(2)}',
+                                DateFormat.yMMMd().format(
+                                    widget.transactions[actualIndex].date),
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        Expanded(
+                            child: Text(
+                                '\$${widget.transactions[actualIndex].amount.toStringAsFixed(2)}',
                                 style: TextStyle(fontWeight: FontWeight.bold))),
                         Expanded(
                           child: Row(
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () => editTransaction(
-                                    transactions[actualIndex]), // edit button
+                              EditButton(
+                                editTransaction: () => widget.editTransaction(
+                                    widget.transactions[actualIndex]),
                               ),
-                              IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () => deleteTransaction(
-                                    transactions[actualIndex]
-                                        .id), // delete button
-                              ),
+                              SizedBox(width: 10),
+                              DeleteButton(
+                                  deleteTransaction: () =>
+                                      widget.deleteTransaction(
+                                          widget.transactions[actualIndex])),
                             ],
                           ),
                         ),
