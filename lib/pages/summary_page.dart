@@ -6,9 +6,13 @@ import '../keys.dart';
 import '../widgets/transaction_list.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/sort_menu_button.dart';
+import '../widgets/filter_button.dart';
+
+bool filtered = false;
 
 class SummaryPage extends StatefulWidget {
   final List<Transaction> transactions;
+
   SummaryPage(this.transactions);
   @override
   _SummaryPageState createState() => _SummaryPageState();
@@ -16,6 +20,87 @@ class SummaryPage extends StatefulWidget {
 
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
+  List<Transaction> filteredTransactions = [];
+
+  void _handleFilter(FilterOptions option) {
+    // Get current date and time
+    DateTime now = DateTime.now();
+
+    switch (option) {
+      case FilterOptions.None:
+        // Show all transactions
+        filteredTransactions = transactions;
+        break;
+      case FilterOptions.Last7Days:
+        // Filter transactions from last 7 days
+        DateTime oneWeekAgo = now.subtract(Duration(days: 7));
+        filteredTransactions = transactions.where((tx) {
+          return tx.date.isAfter(oneWeekAgo);
+        }).toList();
+        break;
+      case FilterOptions.Last30Days:
+        // Filter transactions from last 30 days
+        DateTime oneMonthAgo = now.subtract(Duration(days: 30));
+        filteredTransactions = transactions.where((tx) {
+          return tx.date.isAfter(oneMonthAgo);
+        }).toList();
+        break;
+      case FilterOptions.Under30:
+        // Filter transactions under $30
+        filteredTransactions = transactions.where((tx) {
+          return tx.amount < 30.0;
+        }).toList();
+        break;
+      case FilterOptions.Above30:
+        // Filter transactions above $30
+        filteredTransactions = transactions.where((tx) {
+          return tx.amount > 30.0;
+        }).toList();
+        break;
+      case FilterOptions.Food:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Food';
+        }).toList();
+        break;
+      case FilterOptions.Entertainment:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Entertainment';
+        }).toList();
+        break;
+      case FilterOptions.Healthcare:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Healthcare';
+        }).toList();
+        break;
+      case FilterOptions.Utilities:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Utilities';
+        }).toList();
+        break;
+      case FilterOptions.Shopping:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Shopping';
+        }).toList();
+        break;
+      case FilterOptions.Others:
+        // Filter transactions by category
+        filteredTransactions = transactions.where((tx) {
+          return tx.category == 'Others';
+        }).toList();
+        break;
+      default:
+        filteredTransactions = transactions;
+        break;
+    }
+    filtered = true;
+    setState(() {});
+    print("Filter applied");
+  }
 
   Map<String, double> _categoryTotal(List<Transaction> transactions) {
     Map<String, double> categoryTotals = {};
@@ -33,26 +118,26 @@ class _SummaryPageState extends State<SummaryPage> {
 
   void _sortByName() {
     setState(() {
-      transactions.sort((a, b) => a.title.compareTo(b.title));
+      filteredTransactions.sort((a, b) => a.title.compareTo(b.title));
     });
   }
 
   void _sortByCategory() {
     setState(() {
-      transactions.sort((a, b) => a.category.compareTo(b.category));
+      filteredTransactions.sort((a, b) => a.category.compareTo(b.category));
     });
   }
 
   void _sortByDate({required bool ascending}) {
     setState(() {
-      transactions.sort((a, b) =>
+      filteredTransactions.sort((a, b) =>
           ascending ? a.date.compareTo(b.date) : b.date.compareTo(a.date));
     });
   }
 
   void _sortByAmount({required bool ascending}) {
     setState(() {
-      transactions.sort((a, b) => ascending
+      filteredTransactions.sort((a, b) => ascending
           ? a.amount.compareTo(b.amount)
           : b.amount.compareTo(a.amount));
     });
@@ -66,7 +151,11 @@ class _SummaryPageState extends State<SummaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    Map<String, double> categoryTotals = _categoryTotal(transactions);
+    if (filtered != true) {
+      filteredTransactions = transactions;
+    }
+
+    Map<String, double> categoryTotals = _categoryTotal(filteredTransactions);
 
     return CustomScrollView(
       slivers: <Widget>[
@@ -88,7 +177,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   top: MediaQuery.of(context).padding.top + 80,
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: TransactionList(
-                      transactions,
+                      filteredTransactions,
                       _currentPage,
                       _pageLength,
                       homePageKey.currentState!.editTransaction,
@@ -148,7 +237,7 @@ class _SummaryPageState extends State<SummaryPage> {
                           },
                           onTap: () {
                             if ((_currentPage + 1) * _pageLength <
-                                transactions.length) {
+                                filteredTransactions.length) {
                               setState(() {
                                 _currentPage++;
                               });
@@ -169,7 +258,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   top: 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90,
                   child: Text(
-                    'Total: \$${transactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)} (${transactions.length} Transactions)',
+                    'Total: \$${filteredTransactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)} (${filteredTransactions.length} Transactions)',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -205,12 +294,18 @@ class _SummaryPageState extends State<SummaryPage> {
                     },
                   ),
                 ),
+                //filter_button
+                Positioned(
+                  top: 35,
+                  right: 55,
+                  child: FilterButton(onFilter: _handleFilter),
+                ),
                 //Page count
                 Positioned(
                   top: MediaQuery.of(context).size.width / 2.5 - 40,
                   left: MediaQuery.of(context).size.width / 2.5 + 90 + 150,
                   child: Text(
-                    "Page: ${_currentPage + 1} / ${transactions.length % _pageLength == 0 ? transactions.length ~/ _pageLength : (transactions.length ~/ _pageLength) + 1}",
+                    "Page: ${filteredTransactions.isEmpty ? 0 : (_currentPage + 1)} / ${filteredTransactions.length % _pageLength == 0 ? filteredTransactions.length ~/ _pageLength : (filteredTransactions.length ~/ _pageLength) + 1}",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),

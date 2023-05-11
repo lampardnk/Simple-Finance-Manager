@@ -30,6 +30,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     }
 
     widget.addTransaction(
+      DateTime.now().toString(),
       enteredTitle,
       enteredAmount,
       enteredCategory,
