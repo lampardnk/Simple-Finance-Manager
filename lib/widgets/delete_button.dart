@@ -11,6 +11,7 @@ class DeleteButton extends StatefulWidget {
 
 class _DeleteButtonState extends State<DeleteButton> {
   bool _isHoveringDelete = false;
+  Function get deleteTransaction => widget.deleteTransaction;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class _DeleteButtonState extends State<DeleteButton> {
         borderRadius: BorderRadius.circular(5.0),
         color: _isHoveringDelete ? Colors.red : Colors.transparent,
         child: InkWell(
-          onTap: () => widget.deleteTransaction(),
+          onTap: () => deleteTransaction(),
           child: Icon(Icons.delete,
               color: _isHoveringDelete ? Colors.white : Colors.black),
         ),
