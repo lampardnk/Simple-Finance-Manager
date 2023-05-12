@@ -1,87 +1,82 @@
 import 'package:flutter/material.dart';
 
-enum FilterOptions {
-  Last7Days,
-  Last30Days,
-  Under30,
-  Above30,
-  Food,
-  Entertainment,
-  Healthcare,
-  Utilities,
-  Shopping,
-  Others,
-  None, // Add this to handle the case when no filter is selected
+class FilterOption {
+  final String name;
+  bool isSelected;
+
+  FilterOption({required this.name, this.isSelected = false});
 }
 
 class FilterButton extends StatefulWidget {
-  final Function(FilterOptions) onFilter;
+  final Function(List<FilterOption>) onFilter;
+  final List<FilterOption> filterOptions;
 
-  FilterButton({required this.onFilter});
+  FilterButton({required this.onFilter, required this.filterOptions});
 
   @override
   _FilterButtonState createState() => _FilterButtonState();
 }
 
 class _FilterButtonState extends State<FilterButton> {
-  FilterOptions _selectedFilter = FilterOptions.None;
+  List<FilterOption> selectedOptions = [];
+
+  void _showFilterDialog(BuildContext context) {
+    selectedOptions = widget.filterOptions
+        .map((option) =>
+            FilterOption(name: option.name, isSelected: option.isSelected))
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            title: Text('Select Filters'),
+            content: Container(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: selectedOptions.map((option) {
+                  return CheckboxListTile(
+                    title: Text(option.name),
+                    value: option.isSelected,
+                    onChanged: (value) {
+                      setState(() {
+                        option.isSelected = value!;
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  widget.filterOptions.forEach((option) => option.isSelected =
+                      selectedOptions
+                          .firstWhere((o) => o.name == option.name)
+                          .isSelected);
+                  widget.onFilter(widget.filterOptions);
+                },
+                child: Text('Done'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<FilterOptions>(
+    return IconButton(
       icon: Icon(Icons.filter_list),
-      onSelected: (FilterOptions result) {
-        setState(() {
-          _selectedFilter = result;
-        });
-        widget.onFilter(_selectedFilter);
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<FilterOptions>>[
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.None,
-          child: Text('All'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Last7Days,
-          child: Text('From last 7 days'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Last30Days,
-          child: Text('From last 30 days'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Under30,
-          child: Text('Under \$30'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Above30,
-          child: Text('Above \$30'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Food,
-          child: Text('Food'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Entertainment,
-          child: Text('Entertainment'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Healthcare,
-          child: Text('Healthcare'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Utilities,
-          child: Text('Utilities'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Shopping,
-          child: Text('Shopping'),
-        ),
-        const PopupMenuItem<FilterOptions>(
-          value: FilterOptions.Others,
-          child: Text('Others'),
-        ),
-      ],
+      onPressed: () => _showFilterDialog(context),
     );
   }
 }

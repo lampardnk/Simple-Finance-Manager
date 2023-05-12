@@ -18,12 +18,12 @@ class CategoryPieChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.width / 2.5,
+      height: MediaQuery.of(context).size.width / 2.5 - 250,
       child: categoryTotals.isNotEmpty
           ? PieChart(
               dataMap: categoryTotals,
               animationDuration: Duration(milliseconds: 800),
-              chartRadius: MediaQuery.of(context).size.width / 3.2,
+              chartRadius: MediaQuery.of(context).size.width / 3.2 - 150,
               colorList: categoryTotals.keys
                   .map((key) => categoryColors[key] ?? Colors.grey)
                   .toList(),

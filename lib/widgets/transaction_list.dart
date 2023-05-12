@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 
 import 'delete_button.dart';
 import 'edit_button.dart';
-import 'filter_button.dart';
 import '../models/transaction.dart'; // import your transaction model
 
 class TransactionList extends StatefulWidget {
@@ -37,7 +36,7 @@ class _TransactionListState extends State<TransactionList> {
       height: MediaQuery.of(context).size.height -
           MediaQuery.of(context).padding.top -
           MediaQuery.of(context).padding.bottom -
-          350, //Higher value shorter list
+          355, //Higher value shorter list
       width: MediaQuery.of(context).size.width / 2,
       child: Column(
         children: [

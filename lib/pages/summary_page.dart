@@ -7,6 +7,7 @@ import '../widgets/transaction_list.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/sort_menu_button.dart';
 import '../widgets/filter_button.dart';
+import '../widgets/category_weekly_bar.dart';
 
 bool filtered = false;
 
@@ -22,81 +23,62 @@ class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
   List<Transaction> filteredTransactions = [];
 
-  void _handleFilter(FilterOptions option) {
+  void _handleFilter(List<FilterOption> selectedOptions) {
+    List<String> selectedFilters = selectedOptions
+        .where((option) => option.isSelected)
+        .map((option) => option.name)
+        .toList();
+
     // Get current date and time
     DateTime now = DateTime.now();
 
-    switch (option) {
-      case FilterOptions.None:
-        // Show all transactions
-        filteredTransactions = transactions;
-        break;
-      case FilterOptions.Last7Days:
-        // Filter transactions from last 7 days
+    // Define the filteredTransactions list
+    filteredTransactions = [];
+
+    for (var tx in transactions) {
+      if (selectedFilters.contains('All')) {
+        filteredTransactions.add(tx);
+      }
+      if (selectedFilters.contains('From last 7 days')) {
         DateTime oneWeekAgo = now.subtract(Duration(days: 7));
-        filteredTransactions = transactions.where((tx) {
-          return tx.date.isAfter(oneWeekAgo);
-        }).toList();
-        break;
-      case FilterOptions.Last30Days:
-        // Filter transactions from last 30 days
+        if (tx.date.isAfter(oneWeekAgo) &&
+            filteredTransactions.contains(tx) == false) {
+          filteredTransactions.add(tx);
+          continue;
+        }
+      }
+
+      if (selectedFilters.contains('From last 30 days')) {
         DateTime oneMonthAgo = now.subtract(Duration(days: 30));
-        filteredTransactions = transactions.where((tx) {
-          return tx.date.isAfter(oneMonthAgo);
-        }).toList();
-        break;
-      case FilterOptions.Under30:
-        // Filter transactions under $30
-        filteredTransactions = transactions.where((tx) {
-          return tx.amount < 30.0;
-        }).toList();
-        break;
-      case FilterOptions.Above30:
-        // Filter transactions above $30
-        filteredTransactions = transactions.where((tx) {
-          return tx.amount > 30.0;
-        }).toList();
-        break;
-      case FilterOptions.Food:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Food';
-        }).toList();
-        break;
-      case FilterOptions.Entertainment:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Entertainment';
-        }).toList();
-        break;
-      case FilterOptions.Healthcare:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Healthcare';
-        }).toList();
-        break;
-      case FilterOptions.Utilities:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Utilities';
-        }).toList();
-        break;
-      case FilterOptions.Shopping:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Shopping';
-        }).toList();
-        break;
-      case FilterOptions.Others:
-        // Filter transactions by category
-        filteredTransactions = transactions.where((tx) {
-          return tx.category == 'Others';
-        }).toList();
-        break;
-      default:
-        filteredTransactions = transactions;
-        break;
+        if (tx.date.isAfter(oneMonthAgo) &&
+            filteredTransactions.contains(tx) == false) {
+          filteredTransactions.add(tx);
+          continue;
+        }
+      }
+
+      if (selectedFilters.contains('Under \$30')) {
+        if (tx.amount < 30.0 && filteredTransactions.contains(tx) == false) {
+          filteredTransactions.add(tx);
+          continue;
+        }
+      }
+
+      if (selectedFilters.contains('Above \$30')) {
+        if (tx.amount > 30.0 && filteredTransactions.contains(tx) == false) {
+          filteredTransactions.add(tx);
+          continue;
+        }
+      }
+
+      if (selectedFilters.contains(tx.category)) {
+        if (filteredTransactions.contains(tx) == false) {
+          filteredTransactions.add(tx);
+          continue;
+        }
+      }
     }
+
     filtered = true;
     setState(() {});
     print("Filter applied");
@@ -149,6 +131,25 @@ class _SummaryPageState extends State<SummaryPage> {
   bool _isHoveringLeft = false; // define here
   bool _isHoveringRight = false;
 
+  double top_padding = 15;
+  double bottom_padding = 15;
+  double left_padding = 30;
+  double right_padding = 0;
+
+  List<FilterOption> filterOptions = [
+    FilterOption(name: 'All'),
+    FilterOption(name: 'From last 7 days'),
+    FilterOption(name: 'From last 30 days'),
+    FilterOption(name: 'Under \$30'),
+    FilterOption(name: 'Above \$30'),
+    FilterOption(name: 'Food'),
+    FilterOption(name: 'Entertainment'),
+    FilterOption(name: 'Healthcare'),
+    FilterOption(name: 'Utilities'),
+    FilterOption(name: 'Shopping'),
+    FilterOption(name: 'Others'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     if (filtered != true) {
@@ -168,14 +169,24 @@ class _SummaryPageState extends State<SummaryPage> {
               children: [
                 //category_pie_chart
                 Positioned(
-                  top: 0,
-                  left: 0,
+                  top: top_padding,
+                  left: left_padding + 75,
                   child: CategoryPieChart(categoryTotals: categoryTotals),
+                ),
+                //stacked_bar_chart
+                Positioned(
+                  bottom: bottom_padding + 50,
+                  left: left_padding,
+                  height: 290,
+                  width: 550,
+                  child: CategoryWeeklyBar(filteredTransactions),
                 ),
                 //List of transactions
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + 80,
-                  left: MediaQuery.of(context).size.width / 2.5 + 90,
+                  top: MediaQuery.of(context).padding.top + 80 + top_padding,
+                  left: MediaQuery.of(context).size.width / 2.5 +
+                      90 +
+                      left_padding,
                   child: TransactionList(
                       filteredTransactions,
                       _currentPage,
@@ -185,8 +196,12 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //Pagination buttons
                 Positioned(
-                  top: MediaQuery.of(context).size.width / 2.5 - 40,
-                  left: MediaQuery.of(context).size.width / 2.5 + 90,
+                  top: MediaQuery.of(context).size.width / 2.5 -
+                      40 +
+                      top_padding,
+                  left: MediaQuery.of(context).size.width / 2.5 +
+                      90 +
+                      left_padding,
                   child: Row(
                     children: [
                       AnimatedContainer(
@@ -255,8 +270,10 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //Total
                 Positioned(
-                  top: 40,
-                  left: MediaQuery.of(context).size.width / 2.5 + 90,
+                  top: 40 + top_padding,
+                  left: MediaQuery.of(context).size.width / 2.5 +
+                      90 +
+                      left_padding,
                   child: Text(
                     'Total: \$${filteredTransactions.fold(0.0, (sum, tx) => sum + tx.amount).toStringAsFixed(2)} (${filteredTransactions.length} Transactions)',
                     style: TextStyle(
@@ -267,8 +284,8 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //sort_menu_button
                 Positioned(
-                  top: 35,
-                  right: 25,
+                  top: 35 + top_padding,
+                  right: 45 + right_padding,
                   child: SortMenuButton(
                     onSelected: (String value) {
                       switch (value) {
@@ -296,14 +313,19 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
                 //filter_button
                 Positioned(
-                  top: 35,
-                  right: 55,
-                  child: FilterButton(onFilter: _handleFilter),
-                ),
+                    top: 35 + top_padding,
+                    right: 75 + right_padding,
+                    child: FilterButton(
+                        onFilter: _handleFilter, filterOptions: filterOptions)),
                 //Page count
                 Positioned(
-                  top: MediaQuery.of(context).size.width / 2.5 - 40,
-                  left: MediaQuery.of(context).size.width / 2.5 + 90 + 150,
+                  top: MediaQuery.of(context).size.width / 2.5 -
+                      40 +
+                      top_padding,
+                  left: MediaQuery.of(context).size.width / 2.5 +
+                      90 +
+                      150 +
+                      left_padding,
                   child: Text(
                     "Page: ${filteredTransactions.isEmpty ? 0 : (_currentPage + 1)} / ${filteredTransactions.length % _pageLength == 0 ? filteredTransactions.length ~/ _pageLength : (filteredTransactions.length ~/ _pageLength) + 1}",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
