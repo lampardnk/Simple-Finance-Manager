@@ -91,6 +91,7 @@ class HomePageState extends State<HomePage> {
     await transaction.completed;
     print("Transactions saved successfully: $_transactions");
 
+    setState(() {});
     db.close();
   }
 
