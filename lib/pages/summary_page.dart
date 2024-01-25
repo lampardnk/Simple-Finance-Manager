@@ -14,17 +14,70 @@ class SummaryPage extends StatefulWidget {
   SummaryPage(this.transactions);
   @override
   _SummaryPageState createState() => _SummaryPageState();
+
+  static showCustomToast(BuildContext context, String message) {
+    final overlay = Overlay.of(context);
+    OverlayEntry? overlayEntry;
+
+    void removeOverlayEntry() {
+      if (overlayEntry != null) {
+        overlayEntry!.remove();
+        overlayEntry = null;
+      }
+    }
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(20.0),
+            margin: EdgeInsets.symmetric(horizontal: 40.0),
+            decoration: BoxDecoration(
+              color: Colors.blueGrey,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  message,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20.0),
+                ElevatedButton(
+                  onPressed: removeOverlayEntry,
+                  child: Text('Dismiss'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.blueGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry!);
+  }
 }
 
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
   List<Transaction> filteredTransactions = [];
   List<String> categoriesList = [
-    'Healthcare',
     'Food',
-    'Transport',
     'Entertainment',
-    'Other'
+    'Healthcare',
+    'Utilities',
+    'Shopping',
+    'Other',
   ];
 
   void _handleFilter(List<FilterOption> selectedOptions) {

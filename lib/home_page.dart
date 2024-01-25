@@ -4,7 +4,9 @@ import 'package:idb_shim/idb_io.dart' as idb_io;
 import '/models/transaction.dart';
 import 'pages/summary_page.dart';
 import 'pages/add_transaction_page.dart';
-import '/pages/edit_transaction_page.dart';
+import 'pages/edit_transaction_page.dart';
+import 'pages/budget_settings_page.dart'; // Adjust the import path as needed
+
 import 'keys.dart';
 
 class HomePage extends StatefulWidget {
@@ -200,7 +202,11 @@ class HomePageState extends State<HomePage> {
           ),
           IconButton(
             icon: Icon(Icons.account_balance_wallet),
-            onPressed: () => _openAddTransaction(context),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => BudgetSettingsPage()),
+              );
+            },
           ),
         ],
       ),
