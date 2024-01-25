@@ -31,65 +31,6 @@ class _SummaryPageState extends State<SummaryPage> {
     'Shopping',
     'Others',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize budgets and transactions here...
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => showExceededBudgetsToast());
-  }
-
-  void showExceededBudgetsToast() {
-    String message = getExceededBudgetsMessage();
-    if (message.isNotEmpty) {
-      BudgetProgressBarChart.showCustomToast(context, message);
-    }
-  }
-
-  String getExceededBudgetsMessage() {
-    List<String> exceededCategories = [];
-    DateTime now = DateTime.now();
-    double monthlySpent = 0;
-    double weeklySpent = 0;
-
-    // Calculate spent amount for Monthly and Weekly
-    for (var transaction in transactions) {
-      if (transaction.date.isAfter(now.subtract(Duration(days: 30)))) {
-        monthlySpent += transaction.amount;
-      }
-      if (transaction.date.isAfter(now.subtract(Duration(days: 7)))) {
-        weeklySpent += transaction.amount;
-      }
-    }
-
-    // Check if Monthly and Weekly budgets are exceeded
-    checkAndAddExceededCategory('Monthly', monthlySpent);
-    checkAndAddExceededCategory('Weekly', weeklySpent);
-
-    // Check other categories
-    for (var budget in budgets) {
-      double totalSpent = transactions
-          .where((t) => t.category == budget.type)
-          .fold(0, (sum, t) => sum + t.amount);
-      checkAndAddExceededCategory(budget.type, totalSpent);
-    }
-
-    return exceededCategories.isNotEmpty
-        ? 'Budget exceeded for: ${exceededCategories.join(', ')}'
-        : '';
-  }
-
-  void checkAndAddExceededCategory(String type, double spent) {
-    double budgetAmount = budgets
-        .firstWhere((b) => b.type == type,
-            orElse: () => Budget(type: type, amount: 0))
-        .amount;
-    if (spent > budgetAmount) {
-      exceededCategories.add(type);
-    }
-  }
-
   List<String> exceededCategories = [];
 
   void _handleFilter(List<FilterOption> selectedOptions) {
