@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:first_app/models/transaction.dart';
-
 import '../keys.dart';
-
 import '../widgets/transaction_list.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/sort_menu_button.dart';
 import '../widgets/filter_button.dart';
-import '../widgets/category_weekly_bar.dart';
 
 bool filtered = false;
 
@@ -22,6 +19,13 @@ class SummaryPage extends StatefulWidget {
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
   List<Transaction> filteredTransactions = [];
+  List<String> categoriesList = [
+    'Healthcare',
+    'Food',
+    'Transport',
+    'Entertainment',
+    'Other'
+  ];
 
   void _handleFilter(List<FilterOption> selectedOptions) {
     List<String> selectedFilters = selectedOptions
@@ -32,51 +36,45 @@ class _SummaryPageState extends State<SummaryPage> {
     // Get current date and time
     DateTime now = DateTime.now();
 
-    // Define the filteredTransactions list
-    filteredTransactions = [];
+    // Start with all transactions
+    filteredTransactions = transactions;
 
-    for (var tx in transactions) {
-      if (selectedFilters.contains('All')) {
-        filteredTransactions.add(tx);
-      }
-      if (selectedFilters.contains('From last 7 days')) {
-        DateTime oneWeekAgo = now.subtract(Duration(days: 7));
-        if (tx.date.isAfter(oneWeekAgo) &&
-            filteredTransactions.contains(tx) == false) {
-          filteredTransactions.add(tx);
-          continue;
-        }
-      }
+    if (selectedFilters.contains('All')) {
+      return; // If 'All' is selected, no need to filter
+    }
 
-      if (selectedFilters.contains('From last 30 days')) {
-        DateTime oneMonthAgo = now.subtract(Duration(days: 30));
-        if (tx.date.isAfter(oneMonthAgo) &&
-            filteredTransactions.contains(tx) == false) {
-          filteredTransactions.add(tx);
-          continue;
-        }
-      }
+    if (selectedFilters.contains('From last 7 days')) {
+      DateTime oneWeekAgo = now.subtract(Duration(days: 7));
+      filteredTransactions = filteredTransactions
+          .where((tx) => tx.date.isAfter(oneWeekAgo))
+          .toList();
+    }
 
-      if (selectedFilters.contains('Under \$30')) {
-        if (tx.amount < 30.0 && filteredTransactions.contains(tx) == false) {
-          filteredTransactions.add(tx);
-          continue;
-        }
-      }
+    if (selectedFilters.contains('From last 30 days')) {
+      DateTime oneMonthAgo = now.subtract(Duration(days: 30));
+      filteredTransactions = filteredTransactions
+          .where((tx) => tx.date.isAfter(oneMonthAgo))
+          .toList();
+    }
 
-      if (selectedFilters.contains('Above \$30')) {
-        if (tx.amount > 30.0 && filteredTransactions.contains(tx) == false) {
-          filteredTransactions.add(tx);
-          continue;
-        }
-      }
+    if (selectedFilters.contains('Under \$30')) {
+      filteredTransactions =
+          filteredTransactions.where((tx) => tx.amount < 30.0).toList();
+    }
 
-      if (selectedFilters.contains(tx.category)) {
-        if (filteredTransactions.contains(tx) == false) {
-          filteredTransactions.add(tx);
-          continue;
-        }
-      }
+    if (selectedFilters.contains('Above \$30')) {
+      filteredTransactions =
+          filteredTransactions.where((tx) => tx.amount > 30.0).toList();
+    }
+
+    // Filter by category
+    List<String> categories = selectedFilters
+        .where((filter) => categoriesList.contains(filter))
+        .toList();
+    if (categories.isNotEmpty) {
+      filteredTransactions = filteredTransactions
+          .where((tx) => categories.contains(tx.category))
+          .toList();
     }
 
     filtered = true;
@@ -174,13 +172,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: CategoryPieChart(categoryTotals: categoryTotals),
                 ),
                 //stacked_bar_chart
-                Positioned(
-                  bottom: bottom_padding + 50,
-                  left: left_padding,
-                  height: 290,
-                  width: 550,
-                  child: CategoryWeeklyBar(filteredTransactions),
-                ),
+
                 //List of transactions
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 80 + top_padding,

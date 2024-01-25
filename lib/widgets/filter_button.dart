@@ -32,7 +32,7 @@ class _FilterButtonState extends State<FilterButton> {
         builder: (BuildContext context, StateSetter setState) {
           return AlertDialog(
             title: Text('Select Filters'),
-            content: Container(
+            content: SizedBox(
               width: double.maxFinite,
               child: ListView(
                 shrinkWrap: true,
@@ -57,10 +57,12 @@ class _FilterButtonState extends State<FilterButton> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  widget.filterOptions.forEach((option) => option.isSelected =
+                  for (var option in widget.filterOptions) {
+                    option.isSelected =
                       selectedOptions
                           .firstWhere((o) => o.name == option.name)
-                          .isSelected);
+                          .isSelected;
+                  }
                   widget.onFilter(widget.filterOptions);
                 },
                 child: Text('Done'),

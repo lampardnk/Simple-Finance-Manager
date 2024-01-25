@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:first_app/home_page.dart';
-import 'package:flutter/rendering.dart';
 
 void main() async {
   // debugPaintSizeEnabled = true;
@@ -13,9 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Personal Finance Manager',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        splashColor: Colors.transparent,
-        hoverColor: Colors.transparent,
+        primaryColor: Colors.white,
       ),
       home: HomePage(),
       debugShowCheckedModeBanner: false,

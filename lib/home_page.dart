@@ -192,7 +192,7 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Personal Finance Manager - beta 1.1.5'),
+        title: Text('Personal Finance Manager'),
         actions: [
           IconButton(
             icon: Icon(Icons.add),

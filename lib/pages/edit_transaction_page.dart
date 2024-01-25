@@ -123,13 +123,16 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                   scale: _isHoveringUp ? 1.1 : 1.0,
                   child: ElevatedButton(
                     onPressed: () => _selectDate(context),
-                    child: Text('Select Date'),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
                         _isHoveringUp
-                            ? Colors.green
+                            ? Colors.blueGrey[100]
                             : Theme.of(context).primaryColor,
                       ),
+                    ),
+                    child: Text(
+                      'Select Date',
+                      style: TextStyle(color: Colors.blue),
                     ),
                   ),
                 ),
@@ -145,13 +148,16 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                   scale: _isHoveringDown ? 1.1 : 1.0,
                   child: ElevatedButton(
                     onPressed: _submitData,
-                    child: Text('Add Transaction'),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
                         _isHoveringDown
-                            ? Colors.green
+                            ? Colors.blueGrey[100]
                             : Theme.of(context).primaryColor,
                       ),
+                    ),
+                    child: Text(
+                      'Add Transaction',
+                      style: TextStyle(color: Colors.blue),
                     ),
                   ),
                 ),

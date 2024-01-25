@@ -17,7 +17,7 @@ class CategoryPieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.width / 2.5 - 250,
       child: categoryTotals.isNotEmpty
           ? PieChart(
