@@ -1,4 +1,5 @@
 import 'package:first_app/models/budget.dart';
+import 'package:first_app/widgets/budget_progress_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/models/transaction.dart';
 import '../keys.dart';
@@ -16,58 +17,6 @@ class SummaryPage extends StatefulWidget {
   SummaryPage(this.transactions, this.budgets);
   @override
   _SummaryPageState createState() => _SummaryPageState();
-
-  static showCustomToast(BuildContext context, String message) {
-    final overlay = Overlay.of(context);
-    OverlayEntry? overlayEntry;
-
-    void removeOverlayEntry() {
-      if (overlayEntry != null) {
-        overlayEntry!.remove();
-        overlayEntry = null;
-      }
-    }
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(20.0),
-            margin: EdgeInsets.symmetric(horizontal: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.blueGrey,
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  message,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20.0),
-                ElevatedButton(
-                  onPressed: removeOverlayEntry,
-                  child: Text('Dismiss'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.blueGrey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    overlay.insert(overlayEntry!);
-  }
 }
 
 class _SummaryPageState extends State<SummaryPage> {
@@ -80,8 +29,68 @@ class _SummaryPageState extends State<SummaryPage> {
     'Healthcare',
     'Utilities',
     'Shopping',
-    'Other',
+    'Others',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize budgets and transactions here...
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => showExceededBudgetsToast());
+  }
+
+  void showExceededBudgetsToast() {
+    String message = getExceededBudgetsMessage();
+    if (message.isNotEmpty) {
+      BudgetProgressBarChart.showCustomToast(context, message);
+    }
+  }
+
+  String getExceededBudgetsMessage() {
+    List<String> exceededCategories = [];
+    DateTime now = DateTime.now();
+    double monthlySpent = 0;
+    double weeklySpent = 0;
+
+    // Calculate spent amount for Monthly and Weekly
+    for (var transaction in transactions) {
+      if (transaction.date.isAfter(now.subtract(Duration(days: 30)))) {
+        monthlySpent += transaction.amount;
+      }
+      if (transaction.date.isAfter(now.subtract(Duration(days: 7)))) {
+        weeklySpent += transaction.amount;
+      }
+    }
+
+    // Check if Monthly and Weekly budgets are exceeded
+    checkAndAddExceededCategory('Monthly', monthlySpent);
+    checkAndAddExceededCategory('Weekly', weeklySpent);
+
+    // Check other categories
+    for (var budget in budgets) {
+      double totalSpent = transactions
+          .where((t) => t.category == budget.type)
+          .fold(0, (sum, t) => sum + t.amount);
+      checkAndAddExceededCategory(budget.type, totalSpent);
+    }
+
+    return exceededCategories.isNotEmpty
+        ? 'Budget exceeded for: ${exceededCategories.join(', ')}'
+        : '';
+  }
+
+  void checkAndAddExceededCategory(String type, double spent) {
+    double budgetAmount = budgets
+        .firstWhere((b) => b.type == type,
+            orElse: () => Budget(type: type, amount: 0))
+        .amount;
+    if (spent > budgetAmount) {
+      exceededCategories.add(type);
+    }
+  }
+
+  List<String> exceededCategories = [];
 
   void _handleFilter(List<FilterOption> selectedOptions) {
     List<String> selectedFilters = selectedOptions
@@ -227,8 +236,18 @@ class _SummaryPageState extends State<SummaryPage> {
                   left: left_padding + 75,
                   child: CategoryPieChart(categoryTotals: categoryTotals),
                 ),
-                //stacked_bar_chart
-
+                Positioned(
+                  top: MediaQuery.of(context).size.width / 4,
+                  left: left_padding + 75,
+                  child: SizedBox(
+                    width: 600,
+                    height: 400,
+                    child: BudgetProgressBarChart(
+                      budgets: budgets,
+                      transactions: transactions,
+                    ),
+                  ),
+                ),
                 //List of transactions
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 80 + top_padding,

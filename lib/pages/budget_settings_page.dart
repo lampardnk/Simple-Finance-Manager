@@ -37,7 +37,7 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
       'Healthcare': TextEditingController(),
       'Utilities': TextEditingController(),
       'Shopping': TextEditingController(),
-      'Other': TextEditingController(),
+      'Others': TextEditingController(),
     };
 
     for (var budget in widget.budgets) {

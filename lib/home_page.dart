@@ -46,7 +46,7 @@ class HomePageState extends State<HomePage> {
     _transactions = transactionsList
         .map((transactionJson) => Transaction.fromJson(transactionJson))
         .toList();
-    print("Transactions loaded successfully: $_transactions");
+    print("Transactions loaded successfully");
     setState(() {});
 
     db.close();
@@ -68,7 +68,7 @@ class HomePageState extends State<HomePage> {
     _budgets =
         budgetsList.map((budgetJson) => Budget.fromJson(budgetJson)).toList();
 
-    print("Budgets loaded successfully: $_budgets");
+    print("Budgets loaded successfully");
     setState(() {});
 
     db.close();
@@ -117,7 +117,7 @@ class HomePageState extends State<HomePage> {
 
     // Wait for the transaction to complete.
     await transaction.completed;
-    print("Transactions saved successfully: $_transactions");
+    print("Transactions saved successfully");
 
     setState(() {});
     db.close();
@@ -239,7 +239,7 @@ class HomePageState extends State<HomePage> {
       }
 
       await transaction.completed;
-      print("Budgets saved successfully: $_budgets");
+      print("Budgets saved successfully");
 
       setState(() {});
     } catch (e) {
@@ -258,7 +258,7 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _budgets.add(newBg);
       _saveBudget();
-      print("Transaction added successfully: $newBg");
+      print("Budget added successfully: $newBg");
     });
   }
 
@@ -267,7 +267,7 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _budgets.remove(deletedBudget);
       _saveBudget();
-      print("Transaction deleted successfully: $type");
+      print("Budget deleted successfully: $type");
     });
   }
 
@@ -280,7 +280,7 @@ class HomePageState extends State<HomePage> {
       _budgets.removeWhere((budget) => budget.type == type);
       _budgets.add(newBg);
       _saveBudget();
-      print("Transaction edited successfully: $newBg");
+      print("Budget edited successfully: $newBg");
     });
   }
 
