@@ -1,3 +1,4 @@
+import 'package:first_app/widgets/budget_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:idb_shim/idb.dart' as idb;
 import 'package:idb_shim/idb_io.dart' as idb_io;
@@ -141,7 +142,8 @@ class HomePageState extends State<HomePage> {
   }
 
   void _openAddTransaction(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             AddTransactionPage(_addNewTransaction),
@@ -160,7 +162,11 @@ class HomePageState extends State<HomePage> {
         },
         transitionDuration: Duration(milliseconds: 450),
       ),
-    );
+    )
+        .then((_) {
+      // This block is executed when returning back to HomePage
+      _showBackMessage('Returned from adding a transaction');
+    });
   }
 
   void editTransaction(Transaction fT) {
@@ -284,12 +290,37 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  void _showBackMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(width: 8),
+            Expanded(
+              child: BudgetNotification(
+                  budgets: _budgets, transactions: _transactions),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.grey[400],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        elevation: 6.0,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Personal Finance Manager'),
         actions: [
+          BudgetNotification(budgets: _budgets, transactions: _transactions),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () => _openAddTransaction(context),
