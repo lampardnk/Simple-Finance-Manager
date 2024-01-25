@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:idb_shim/idb.dart' as idb;
 import 'package:idb_shim/idb_io.dart' as idb_io;
 import '/models/transaction.dart';
+import 'models/budget.dart';
 import 'pages/summary_page.dart';
 import 'pages/add_transaction_page.dart';
 import 'pages/edit_transaction_page.dart';
@@ -18,12 +19,15 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   final String _transactionsKey = "transactions";
+  final String _budgetsKey = "budget";
   List<Transaction> _transactions = [];
+  List<Budget> _budgets = [];
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
+    _loadBudgets();
   }
 
   Future<void> _loadTransactions() async {
@@ -43,6 +47,28 @@ class HomePageState extends State<HomePage> {
         .map((transactionJson) => Transaction.fromJson(transactionJson))
         .toList();
     print("Transactions loaded successfully: $_transactions");
+    setState(() {});
+
+    db.close();
+  }
+
+  Future<void> _loadBudgets() async {
+    print("Loading budgets...");
+    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
+    idb.Database db = await idbFactory.open('budget_settings', version: 1,
+        onUpgradeNeeded: (idb.VersionChangeEvent event) {
+      idb.Database db = event.database;
+      db.createObjectStore(_budgetsKey);
+    });
+    idb.ObjectStore store = db
+        .transaction(_budgetsKey, idb.idbModeReadOnly)
+        .objectStore(_budgetsKey);
+    List<dynamic> budgetsList = await store.getAll();
+
+    _budgets =
+        budgetsList.map((budgetJson) => Budget.fromJson(budgetJson)).toList();
+
+    print("Budgets loaded successfully: $_budgets");
     setState(() {});
 
     db.close();
@@ -190,6 +216,74 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  void _saveBudget() async {
+    print("Saving budgets...");
+    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
+    idb.Database? db;
+
+    try {
+      db = await idbFactory.open('budget_settings', version: 1,
+          onUpgradeNeeded: (idb.VersionChangeEvent event) {
+        idb.Database db = event.database;
+        db.createObjectStore(_budgetsKey);
+      });
+
+      idb.Transaction transaction =
+          db.transaction(_budgetsKey, idb.idbModeReadWrite);
+      idb.ObjectStore store = transaction.objectStore(_budgetsKey);
+
+      // Update or add each budget
+      for (Budget budget in _budgets) {
+        await store.delete(budget.type);
+        await store.put(budget.toJson(), budget.type);
+      }
+
+      await transaction.completed;
+      print("Budgets saved successfully: $_budgets");
+
+      setState(() {});
+    } catch (e) {
+      print("Error in saving budgets: $e");
+    } finally {
+      db?.close();
+    }
+  }
+
+  void addBudget(String type, double amount) async {
+    final newBg = Budget(
+      type: type,
+      amount: amount,
+    );
+
+    setState(() {
+      _budgets.add(newBg);
+      _saveBudget();
+      print("Transaction added successfully: $newBg");
+    });
+  }
+
+  void deleteBudget(String type) async {
+    final deletedBudget = _budgets.firstWhere((budget) => budget.type == type);
+    setState(() {
+      _budgets.remove(deletedBudget);
+      _saveBudget();
+      print("Transaction deleted successfully: $type");
+    });
+  }
+
+  void editBudget(String type, double amount) async {
+    final newBg = Budget(
+      type: type,
+      amount: amount,
+    );
+    setState(() {
+      _budgets.removeWhere((budget) => budget.type == type);
+      _budgets.add(newBg);
+      _saveBudget();
+      print("Transaction edited successfully: $newBg");
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -204,13 +298,18 @@ class HomePageState extends State<HomePage> {
             icon: Icon(Icons.account_balance_wallet),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => BudgetSettingsPage()),
+                MaterialPageRoute(
+                    builder: (context) => BudgetSettingsPage(
+                          budgets: _budgets,
+                          addBudget: addBudget,
+                          editBudget: editBudget,
+                        )),
               );
             },
           ),
         ],
       ),
-      body: SummaryPage(_transactions),
+      body: SummaryPage(_transactions, _budgets),
     );
   }
 }

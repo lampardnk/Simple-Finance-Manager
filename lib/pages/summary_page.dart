@@ -1,3 +1,4 @@
+import 'package:first_app/models/budget.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/models/transaction.dart';
 import '../keys.dart';
@@ -10,8 +11,9 @@ bool filtered = false;
 
 class SummaryPage extends StatefulWidget {
   final List<Transaction> transactions;
+  final List<Budget> budgets;
 
-  SummaryPage(this.transactions);
+  SummaryPage(this.transactions, this.budgets);
   @override
   _SummaryPageState createState() => _SummaryPageState();
 
@@ -70,6 +72,7 @@ class SummaryPage extends StatefulWidget {
 
 class _SummaryPageState extends State<SummaryPage> {
   List<Transaction> get transactions => widget.transactions;
+  List<Budget> get budgets => widget.budgets;
   List<Transaction> filteredTransactions = [];
   List<String> categoriesList = [
     'Food',

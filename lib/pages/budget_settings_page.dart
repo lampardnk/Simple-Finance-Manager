@@ -1,22 +1,37 @@
-import 'dart:convert';
-import 'dart:io';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'summary_page.dart'; // Import SummaryPage for showCustomToast
+import '../models/budget.dart'; // Ensure this is the correct path to Budget model
 
 class BudgetSettingsPage extends StatefulWidget {
+  final List<Budget> budgets; // Pass budgets from HomePage
+  final Function addBudget;
+  final Function editBudget;
+
+  BudgetSettingsPage({
+    Key? key,
+    required this.budgets,
+    required this.addBudget,
+    required this.editBudget,
+  }) : super(key: key);
+
   @override
   _BudgetSettingsPageState createState() => _BudgetSettingsPageState();
 }
 
 class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
-  final TextEditingController _monthlyController = TextEditingController();
-  final TextEditingController _weeklyController = TextEditingController();
-  Map<String, TextEditingController> categoryControllers = {};
+  Map<String, TextEditingController> _categoryControllers = {};
 
   @override
   void initState() {
     super.initState();
-    categoryControllers = {
+    _initializeControllers();
+  }
+
+  void _initializeControllers() {
+    // Initialize controllers with current budget values
+    _categoryControllers = {
+      'Monthly': TextEditingController(),
+      'Weekly': TextEditingController(),
       'Food': TextEditingController(),
       'Entertainment': TextEditingController(),
       'Healthcare': TextEditingController(),
@@ -24,67 +39,42 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
       'Shopping': TextEditingController(),
       'Other': TextEditingController(),
     };
-    loadBudgetSettings();
-  }
 
-  Future<void> loadBudgetSettings() async {
-    final budgetSettings = await readBudgetSettings();
-    setState(() {
-      _monthlyController.text = budgetSettings['Monthly'] ?? '';
-      _weeklyController.text = budgetSettings['Weekly'] ?? '';
-      categoryControllers.forEach((key, controller) {
-        controller.text = budgetSettings[key] ?? '';
-      });
-    });
-  }
-
-  Future<Map<String, String>> readBudgetSettings() async {
-    try {
-      final file = await _localFile;
-      if (!file.existsSync()) {
-        return {};
+    for (var budget in widget.budgets) {
+      if (_categoryControllers.containsKey(budget.type)) {
+        _categoryControllers[budget.type]!.text = budget.amount.toString();
       }
-      String contents = await file.readAsString();
-      return Map<String, String>.from(json.decode(contents));
-    } catch (e) {
-      return {};
     }
   }
 
-  Future<File> get _localFile async {
-    return File('idb/budget_settings');
-  }
-
-  void updateBudget(String category, String value) async {
-    if (value.isEmpty || double.tryParse(value) == null) {
-      SummaryPage.showCustomToast(
-          context, "Please enter a valid number for $category");
+  void _updateBudget(String category, String value) async {
+    double? amount = double.tryParse(value);
+    if (amount == null || amount < 0) {
+      // Show error if not a valid positive number
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid positive number')),
+      );
       return;
     }
 
-    double budget = double.parse(value);
-    String budgetType =
-        budget == 0 ? 'Not Set' : budget.toStringAsFixed(2); // Changed here
+    Budget? existingBudget = widget.budgets.firstWhereOrNull(
+      (b) => b.type == category,
+    );
 
-    // Update the controller text
-    setState(() {
-      categoryControllers[category]?.text = budgetType;
-    });
+    if (existingBudget != null) {
+      // Edit existing budget
+      widget.editBudget(category, amount);
+    } else {
+      // Add new budget
+      widget.addBudget(category, amount);
+    }
 
-    // Save the updated settings
-    final budgetSettings = await readBudgetSettings();
-    budgetSettings[category] = budgetType;
-    await writeBudgetSettings(budgetSettings);
-
-    SummaryPage.showCustomToast(context, "$category Budget Set: $budgetType");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$category budget updated')),
+    );
   }
 
-  Future<File> writeBudgetSettings(Map<String, String> budgetSettings) async {
-    final file = await _localFile;
-    return file.writeAsString(json.encode(budgetSettings));
-  }
-
-  Widget budgetInputField(String label, TextEditingController controller) {
+  Widget _budgetInputField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -97,23 +87,19 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
                   controller: controller,
                   decoration: InputDecoration(labelText: label),
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    if (double.tryParse(value) == null && value.isNotEmpty) {
-                      controller.clear();
-                      SummaryPage.showCustomToast(
-                          context, "Please enter a valid number");
-                    }
-                  },
                 ),
               ),
               IconButton(
                 icon: Icon(Icons.check),
-                onPressed: () => updateBudget(label, controller.text),
+                onPressed: () => _updateBudget(label, controller.text),
               ),
               IconButton(
                 icon: Icon(Icons.close),
                 onPressed: () {
-                  controller.clear();
+                  // Set the budget to 0 when 'X' button is pressed
+                  _updateBudget(label, '0');
+                  controller.text =
+                      '0'; // Update the text field to reflect the change
                   setState(() {});
                 },
               ),
@@ -135,10 +121,8 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            budgetInputField('Monthly', _monthlyController),
-            budgetInputField('Weekly', _weeklyController),
-            ...categoryControllers.entries
-                .map((entry) => budgetInputField(entry.key, entry.value))
+            ..._categoryControllers.entries
+                .map((entry) => _budgetInputField(entry.key, entry.value))
                 .toList(),
           ],
         ),
@@ -148,9 +132,7 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
 
   @override
   void dispose() {
-    _monthlyController.dispose();
-    _weeklyController.dispose();
-    categoryControllers.forEach((_, controller) => controller.dispose());
+    _categoryControllers.forEach((_, controller) => controller.dispose());
     super.dispose();
   }
 }
