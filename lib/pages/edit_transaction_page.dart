@@ -75,7 +75,7 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Transaction'),
+        title: Text('Edit Transaction'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
