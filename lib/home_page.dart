@@ -165,7 +165,7 @@ class HomePageState extends State<HomePage> {
     )
         .then((_) {
       // This block is executed when returning back to HomePage
-      _showBackMessage('Returned from adding a transaction');
+      _showBackMessage();
     });
   }
 
@@ -290,7 +290,7 @@ class HomePageState extends State<HomePage> {
     });
   }
 
-  void _showBackMessage(String message) {
+  void _showBackMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

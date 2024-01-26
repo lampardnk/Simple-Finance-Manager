@@ -28,7 +28,6 @@ class BudgetNotification extends StatelessWidget {
             .where((t) => t.category == budget.type)
             .fold(0.0, (sum, item) => sum + item.amount);
       }
-
       if (transactionSum >= budget.amount) {
         exceededBudgets.add(budget.type);
       }
