@@ -39,14 +39,12 @@ class _SummaryPageState extends State<SummaryPage> {
         .map((option) => option.name)
         .toList();
 
-    // Get current date and time
     DateTime now = DateTime.now();
 
-    // Start with all transactions
     filteredTransactions = transactions;
 
     if (selectedFilters.contains('All')) {
-      return; // If 'All' is selected, no need to filter
+      return;
     }
 
     if (selectedFilters.contains('From last 7 days')) {
@@ -73,7 +71,6 @@ class _SummaryPageState extends State<SummaryPage> {
           filteredTransactions.where((tx) => tx.amount > 30.0).toList();
     }
 
-    // Filter by category
     List<String> categories = selectedFilters
         .where((filter) => categoriesList.contains(filter))
         .toList();
@@ -132,7 +129,7 @@ class _SummaryPageState extends State<SummaryPage> {
   int _currentPage = 0;
   int _pageLength = 10;
 
-  bool _isHoveringLeft = false; // define here
+  bool _isHoveringLeft = false;
   bool _isHoveringRight = false;
 
   double top_padding = 15;
@@ -171,12 +168,13 @@ class _SummaryPageState extends State<SummaryPage> {
             maxHeight: MediaQuery.of(context).size.width / 2,
             child: Stack(
               children: [
-                //category_pie_chart
+                //Pie chart
                 Positioned(
                   top: top_padding,
                   left: left_padding + 75,
                   child: CategoryPieChart(categoryTotals: categoryTotals),
                 ),
+                //Budget progress bar chart
                 Positioned(
                   top: MediaQuery.of(context).size.width / 4,
                   left: left_padding + 75,
@@ -290,7 +288,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     ),
                   ),
                 ),
-                //sort_menu_button
+                //Sort menu
                 Positioned(
                   top: 35 + top_padding,
                   right: 45 + right_padding,
@@ -319,7 +317,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     },
                   ),
                 ),
-                //filter_button
+                //Filter menu
                 Positioned(
                     top: 35 + top_padding,
                     right: 75 + right_padding,

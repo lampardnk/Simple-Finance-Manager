@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import '../models/budget.dart'; // Ensure this is the correct path to Budget model
+import '../models/budget.dart';
 
 class BudgetSettingsPage extends StatefulWidget {
-  final List<Budget> budgets; // Pass budgets from HomePage
+  final List<Budget> budgets;
   final Function addBudget;
   final Function editBudget;
 
@@ -28,7 +28,6 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
   }
 
   void _initializeControllers() {
-    // Initialize controllers with current budget values
     _categoryControllers = {
       'Monthly': TextEditingController(),
       'Weekly': TextEditingController(),
@@ -50,7 +49,6 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
   void _updateBudget(String category, String value) async {
     double? amount = double.tryParse(value);
     if (amount == null || amount < 0) {
-      // Show error if not a valid positive number
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a valid positive number')),
       );
@@ -62,10 +60,8 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
     );
 
     if (existingBudget != null) {
-      // Edit existing budget
       widget.editBudget(category, amount);
     } else {
-      // Add new budget
       widget.addBudget(category, amount);
     }
 
@@ -96,10 +92,8 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
               IconButton(
                 icon: Icon(Icons.close),
                 onPressed: () {
-                  // Set the budget to 0 when 'X' button is pressed
                   _updateBudget(label, '0');
-                  controller.text =
-                      '0'; // Update the text field to reflect the change
+                  controller.text = '0';
                   setState(() {});
                 },
               ),

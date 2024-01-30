@@ -3,21 +3,17 @@ import 'package:intl/intl.dart';
 
 import 'delete_button.dart';
 import 'edit_button.dart';
-import '../models/transaction.dart'; // import your transaction model
+import '../models/transaction.dart';
 
 class TransactionList extends StatefulWidget {
   final List<Transaction> filteredTransactions;
   final int _currentPage;
   final int _pageLength;
   final Function editTransaction;
-  final Function deleteTransaction; // new property
+  final Function deleteTransaction;
 
-  TransactionList(
-      this.filteredTransactions,
-      this._currentPage,
-      this._pageLength,
-      this.editTransaction,
-      this.deleteTransaction); // updated
+  TransactionList(this.filteredTransactions, this._currentPage,
+      this._pageLength, this.editTransaction, this.deleteTransaction);
 
   @override
   _TransactionListState createState() => _TransactionListState();
@@ -36,7 +32,7 @@ class _TransactionListState extends State<TransactionList> {
       height: MediaQuery.of(context).size.height -
           MediaQuery.of(context).padding.top -
           MediaQuery.of(context).padding.bottom -
-          355, //Higher value shorter list
+          355,
       width: MediaQuery.of(context).size.width / 2,
       child: Column(
         children: [
@@ -67,7 +63,6 @@ class _TransactionListState extends State<TransactionList> {
               itemBuilder: (BuildContext context, int index) {
                 int actualIndex = _currentPage * _pageLength + index;
                 if (actualIndex < fT.length) {
-                  // Display transaction
                   return Container(
                     margin: EdgeInsets.symmetric(vertical: 4.0),
                     padding: EdgeInsets.all(8.0),
@@ -112,7 +107,6 @@ class _TransactionListState extends State<TransactionList> {
                     ),
                   );
                 } else {
-                  // Display empty row
                   return null;
                 }
               },

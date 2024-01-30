@@ -14,14 +14,13 @@ class BudgetProgressBarChart extends StatelessWidget {
     return charts.BarChart(
       _createSeries(),
       animate: true,
-      vertical: false, // Horizontal bar chart
+      vertical: false,
       barRendererDecorator: charts.BarLabelDecorator<String>(),
       domainAxis: charts.OrdinalAxisSpec(),
       primaryMeasureAxis: charts.NumericAxisSpec(
         renderSpec: charts.GridlineRendererSpec(
           labelStyle: charts.TextStyleSpec(
-              fontSize: 10, // size in Pts.
-              color: charts.MaterialPalette.black),
+              fontSize: 10, color: charts.MaterialPalette.black),
         ),
       ),
     );
@@ -30,7 +29,6 @@ class BudgetProgressBarChart extends StatelessWidget {
   List<charts.Series<ProgressData, String>> _createSeries() {
     List<ProgressData> data = [];
 
-    // Ensure default columns are present
     var defaultKeys = [
       'Monthly',
       'Weekly',
@@ -47,14 +45,12 @@ class BudgetProgressBarChart extends StatelessWidget {
 
     DateTime now = DateTime.now();
     for (var transaction in transactions) {
-      // Sum transactions for each category
       if (defaultKeys.contains(transaction.category)) {
         transactionSumMap.update(
             transaction.category, (value) => value + transaction.amount,
             ifAbsent: () => transaction.amount);
       }
 
-      // Sum transactions for 'Monthly' and 'Weekly'
       DateTime transactionDate = transaction.date;
       if (transactionDate.isAfter(now.subtract(Duration(days: 30)))) {
         transactionSumMap.update(
@@ -74,8 +70,7 @@ class BudgetProgressBarChart extends StatelessWidget {
 
       double progressPercentage =
           (budgetAmount > 0) ? (transactionSum / budgetAmount * 100) : 0;
-      double displayProgress =
-          progressPercentage.clamp(0, 100); // Used for visual bar length
+      double displayProgress = progressPercentage.clamp(0, 100);
 
       data.add(ProgressData(key, displayProgress,
           actualProgress: progressPercentage));
@@ -98,15 +93,12 @@ class BudgetProgressBarChart extends StatelessWidget {
 }
 
 charts.Color _getColorBasedOnProgress(double progress) {
-  // Interpolate between colors based on progress percentage
   if (progress <= 30) {
     return charts.ColorUtil.fromDartColor(Colors.green);
   } else if (progress <= 65) {
-    // Interpolate between green and yellow
     return charts.ColorUtil.fromDartColor(
         Color.lerp(Colors.green, Colors.yellow, (progress - 30) / 35)!);
   } else {
-    // Interpolate between yellow and red
     return charts.ColorUtil.fromDartColor(
         Color.lerp(Colors.yellow, Colors.red, (progress - 65) / 35)!);
   }

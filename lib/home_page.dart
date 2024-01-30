@@ -7,8 +7,7 @@ import 'models/budget.dart';
 import 'pages/summary_page.dart';
 import 'pages/add_transaction_page.dart';
 import 'pages/edit_transaction_page.dart';
-import 'pages/budget_settings_page.dart'; // Adjust the import path as needed
-
+import 'pages/budget_settings_page.dart';
 import 'keys.dart';
 
 class HomePage extends StatefulWidget {
@@ -98,25 +97,21 @@ class HomePageState extends State<HomePage> {
       return;
     }
 
-    // Start a new transaction for write operations.
     idb.Transaction transaction =
         db.transaction(_transactionsKey, idb.idbModeReadWrite);
     print("Started transaction: $transaction");
     idb.ObjectStore store = transaction.objectStore(_transactionsKey);
     print("Got object store: $store");
 
-    // Clear the store first.
     await store.clear();
     print("Cleared store");
 
-    // Then save all the transactions in a single batch.
     for (Transaction transaction in _transactions) {
       await store.delete(transaction.id);
       await store.put(transaction.toJson(), transaction.id);
     }
     print("Saved transactions");
 
-    // Wait for the transaction to complete.
     await transaction.completed;
     print("Transactions saved successfully");
 
@@ -164,7 +159,6 @@ class HomePageState extends State<HomePage> {
       ),
     )
         .then((_) {
-      // This block is executed when returning back to HomePage
       _showBackMessage();
     });
   }
@@ -210,7 +204,6 @@ class HomePageState extends State<HomePage> {
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
-            // Undo the deletion
             setState(() {
               _transactions.add(deletedTransaction);
               _saveTransactions();
@@ -238,7 +231,6 @@ class HomePageState extends State<HomePage> {
           db.transaction(_budgetsKey, idb.idbModeReadWrite);
       idb.ObjectStore store = transaction.objectStore(_budgetsKey);
 
-      // Update or add each budget
       for (Budget budget in _budgets) {
         await store.delete(budget.type);
         await store.put(budget.toJson(), budget.type);

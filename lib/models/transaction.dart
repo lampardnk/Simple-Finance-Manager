@@ -13,7 +13,6 @@ class Transaction {
     required this.category,
   });
 
-  // Add the fromJson method
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
       id: json['id'],
@@ -24,7 +23,6 @@ class Transaction {
     );
   }
 
-  // Add the toJson method
   Map<String, dynamic> toJson() {
     return {
       'id': id,
