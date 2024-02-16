@@ -13,17 +13,7 @@ class Transaction {
     required this.category,
   });
 
-  factory Transaction.fromJson(Map<String, dynamic> json) {
-    return Transaction(
-      id: json['id'],
-      title: json['title'],
-      amount: json['amount'],
-      date: DateTime.parse(json['date']),
-      category: json['category'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,

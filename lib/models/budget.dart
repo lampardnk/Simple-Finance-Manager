@@ -7,14 +7,7 @@ class Budget {
     required this.amount,
   });
 
-  factory Budget.fromJson(Map<String, dynamic> json) {
-    return Budget(
-      type: json['type'],
-      amount: json['amount'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'type': type,
       'amount': amount,

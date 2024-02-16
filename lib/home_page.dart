@@ -1,7 +1,8 @@
 import 'package:first_app/widgets/budget_notification.dart';
 import 'package:flutter/material.dart';
-import 'package:idb_shim/idb.dart' as idb;
-import 'package:idb_shim/idb_io.dart' as idb_io;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sql;
+import 'dart:async';
+import 'package:path/path.dart' as p;
 import '/models/transaction.dart';
 import 'models/budget.dart';
 import 'pages/summary_page.dart';
@@ -18,109 +19,60 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  final String _transactionsKey = "transactions";
-  final String _budgetsKey = "budget";
+  final String _transactionsTable = "transactions";
+  final String _budgetsTable = "budgets";
   List<Transaction> _transactions = [];
   List<Budget> _budgets = [];
+  late sql.Database database;
 
   @override
   void initState() {
     super.initState();
+    _initDb();
+  }
+
+  Future<void> _initDb() async {
+    var databasesPath = await sql.getDatabasesPath();
+    String dbPath = p.join(databasesPath, 'finance_manager.db');
+    print("Database: $dbPath");
+
+    database = await sql.databaseFactoryFfi.openDatabase(dbPath);
+    await database.execute(
+        'CREATE TABLE IF NOT EXISTS $_transactionsTable (id TEXT PRIMARY KEY, title TEXT, amount REAL, date TEXT, category TEXT)');
+    await database.execute(
+        'CREATE TABLE IF NOT EXISTS $_budgetsTable (type TEXT PRIMARY KEY, amount REAL)');
     _loadTransactions();
     _loadBudgets();
   }
 
   Future<void> _loadTransactions() async {
-    print("Loading transactions...");
-    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
-    idb.Database db = await idbFactory.open('transaction_db', version: 1,
-        onUpgradeNeeded: (idb.VersionChangeEvent event) {
-      idb.Database db = event.database;
-      db.createObjectStore(_transactionsKey);
-    });
-    idb.ObjectStore store = db
-        .transaction(_transactionsKey, idb.idbModeReadOnly)
-        .objectStore(_transactionsKey);
-    List<dynamic> transactionsList = await store.getAll();
-
-    _transactions = transactionsList
-        .map((transactionJson) => Transaction.fromJson(transactionJson))
+    List<Map<String, dynamic>> result =
+        await database.query(_transactionsTable);
+    _transactions = result
+        .map((map) => Transaction(
+              id: map['id'],
+              title: map['title'],
+              amount: map['amount'],
+              date: DateTime.parse(map['date']),
+              category: map['category'],
+            ))
         .toList();
-    print("Transactions loaded successfully");
     setState(() {});
-
-    db.close();
   }
 
   Future<void> _loadBudgets() async {
-    print("Loading budgets...");
-    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
-    idb.Database db = await idbFactory.open('budget_settings', version: 1,
-        onUpgradeNeeded: (idb.VersionChangeEvent event) {
-      idb.Database db = event.database;
-      db.createObjectStore(_budgetsKey);
-    });
-    idb.ObjectStore store = db
-        .transaction(_budgetsKey, idb.idbModeReadOnly)
-        .objectStore(_budgetsKey);
-    List<dynamic> budgetsList = await store.getAll();
-
-    _budgets =
-        budgetsList.map((budgetJson) => Budget.fromJson(budgetJson)).toList();
-
-    print("Budgets loaded successfully");
+    List<Map<String, dynamic>> result = await database.query(_budgetsTable);
+    _budgets = result
+        .map((map) => Budget(
+              type: map['type'],
+              amount: map['amount'],
+            ))
+        .toList();
     setState(() {});
-
-    db.close();
   }
 
-  void _saveTransactions() async {
-    print("Saving transactions...");
-    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
-    print("Got idbFactory: $idbFactory");
-
-    idb.Database? db;
-
-    try {
-      db = await idbFactory.open('transaction_db', version: 1,
-          onUpgradeNeeded: (idb.VersionChangeEvent event) {
-        idb.Database db = event.database;
-        db.createObjectStore(_transactionsKey);
-      });
-      print("Opened database: $db");
-    } catch (e) {
-      print("Error opening database: $e");
-    }
-
-    if (db == null) {
-      print("Database is null, cannot save transactions");
-      return;
-    }
-
-    idb.Transaction transaction =
-        db.transaction(_transactionsKey, idb.idbModeReadWrite);
-    print("Started transaction: $transaction");
-    idb.ObjectStore store = transaction.objectStore(_transactionsKey);
-    print("Got object store: $store");
-
-    await store.clear();
-    print("Cleared store");
-
-    for (Transaction transaction in _transactions) {
-      await store.delete(transaction.id);
-      await store.put(transaction.toJson(), transaction.id);
-    }
-    print("Saved transactions");
-
-    await transaction.completed;
-    print("Transactions saved successfully");
-
-    setState(() {});
-    db.close();
-  }
-
-  void _addNewTransaction(
-      String id, String title, double amount, String category, DateTime dt) {
+  Future<void> _addNewTransaction(String id, String title, double amount,
+      String category, DateTime dt) async {
     final newTx = Transaction(
       id: id,
       title: title,
@@ -129,11 +81,164 @@ class HomePageState extends State<HomePage> {
       category: category,
     );
 
+    String sql =
+        'INSERT INTO $_transactionsTable (id, title, amount, date, category) VALUES (?, ?, ?, ?, ?)';
+    List<dynamic> arguments = [
+      id,
+      title,
+      amount,
+      dt.toIso8601String(),
+      category
+    ];
+
+    await database.rawInsert(sql, arguments);
+
     setState(() {
       _transactions.add(newTx);
-      _saveTransactions();
       print("Transaction added successfully: $newTx");
     });
+  }
+
+  void editTransaction(Transaction fT) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTransactionPage(
+          transaction: fT,
+          editTransaction:
+              (id, newTitle, newAmount, newCategory, newDate) async {
+            final newTx = Transaction(
+              id: id,
+              title: newTitle,
+              amount: newAmount,
+              date: newDate,
+              category: newCategory,
+            );
+
+            String sql =
+                'UPDATE $_transactionsTable SET title = ?, amount = ?, date = ?, category = ? WHERE id = ?';
+            List<dynamic> arguments = [
+              newTitle,
+              newAmount,
+              newDate.toIso8601String(),
+              newCategory,
+              id
+            ];
+
+            await database.rawUpdate(sql, arguments);
+
+            setState(() {
+              _transactions.removeWhere((transaction) => transaction.id == id);
+              _transactions.add(newTx);
+              print("Transaction edited successfully: $newTx");
+            });
+          },
+        ),
+      ),
+    ).then((_) {
+      _showBackMessage();
+    });
+  }
+
+  Future<void> deleteTransaction(Transaction fT) async {
+    String id = fT.id;
+    String sql = 'DELETE FROM $_transactionsTable WHERE id = ?';
+    List<dynamic> arguments = [id];
+
+    await database.rawDelete(sql, arguments);
+
+    setState(() {
+      _transactions.remove(fT);
+      print("Transaction deleted successfully: $id");
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${fT.title} has been deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            // Move async here
+            String sql =
+                'INSERT INTO $_transactionsTable (id, title, amount, date, category) VALUES (?, ?, ?, ?, ?)';
+            List<dynamic> arguments = [
+              fT.id,
+              fT.title,
+              fT.amount,
+              fT.date.toIso8601String(),
+              fT.category
+            ];
+
+            await database.rawInsert(sql, arguments);
+
+            setState(() {
+              // Keep setState synchronous
+              _transactions.add(fT);
+              print("Transaction restored successfully: $id");
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  void addBudget(String type, double amount) async {
+    final newBg = Budget(
+      type: type,
+      amount: amount,
+    );
+
+    String sql = 'INSERT INTO $_budgetsTable (type, amount) VALUES (?, ?)';
+    List<dynamic> arguments = [type, amount];
+
+    await database.rawInsert(sql, arguments);
+
+    setState(() {
+      _budgets.add(newBg);
+      print("Budget added successfully: $newBg");
+    });
+  }
+
+  void editBudget(String type, double amount) async {
+    final newBg = Budget(
+      type: type,
+      amount: amount,
+    );
+
+    String sql = 'UPDATE $_budgetsTable SET amount = ? WHERE type = ?';
+    List<dynamic> arguments = [amount, type];
+
+    await database.rawUpdate(sql, arguments);
+
+    setState(() {
+      _budgets.removeWhere((budget) => budget.type == type);
+      _budgets.add(newBg);
+      print("Budget edited successfully: $newBg");
+    });
+  }
+
+  void _showBackMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(width: 8),
+            Expanded(
+              child: BudgetNotification(
+                  budgets: _budgets, transactions: _transactions),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.grey[400],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        elevation: 6.0,
+        margin: EdgeInsets.all(10),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   void _openAddTransaction(BuildContext context) {
@@ -161,149 +266,6 @@ class HomePageState extends State<HomePage> {
         .then((_) {
       _showBackMessage();
     });
-  }
-
-  void editTransaction(Transaction fT) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTransactionPage(
-          transaction: fT,
-          editTransaction: (id, newTitle, newAmount, newCategory, newDate) {
-            final newTx = Transaction(
-              id: id,
-              title: newTitle,
-              amount: newAmount,
-              date: newDate,
-              category: newCategory,
-            );
-            setState(() {
-              _transactions.removeWhere((transaction) => transaction.id == id);
-              _transactions.add(newTx);
-              _saveTransactions();
-              print("Transaction edited successfully: $newTx");
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  void deleteTransaction(Transaction fT) {
-    String id = fT.id;
-    final deletedTransaction =
-        _transactions.firstWhere((transaction) => transaction.id == id);
-    setState(() {
-      _transactions.remove(deletedTransaction);
-      _saveTransactions();
-      print("Transaction deleted successfully: $id");
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${deletedTransaction.title} has been deleted'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            setState(() {
-              _transactions.add(deletedTransaction);
-              _saveTransactions();
-              print("Transaction restored successfully: $id");
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  void _saveBudget() async {
-    print("Saving budgets...");
-    idb.IdbFactory idbFactory = idb_io.getIdbFactorySembastIo('./idb/');
-    idb.Database? db;
-
-    try {
-      db = await idbFactory.open('budget_settings', version: 1,
-          onUpgradeNeeded: (idb.VersionChangeEvent event) {
-        idb.Database db = event.database;
-        db.createObjectStore(_budgetsKey);
-      });
-
-      idb.Transaction transaction =
-          db.transaction(_budgetsKey, idb.idbModeReadWrite);
-      idb.ObjectStore store = transaction.objectStore(_budgetsKey);
-
-      for (Budget budget in _budgets) {
-        await store.delete(budget.type);
-        await store.put(budget.toJson(), budget.type);
-      }
-
-      await transaction.completed;
-      print("Budgets saved successfully");
-
-      setState(() {});
-    } catch (e) {
-      print("Error in saving budgets: $e");
-    } finally {
-      db?.close();
-    }
-  }
-
-  void addBudget(String type, double amount) async {
-    final newBg = Budget(
-      type: type,
-      amount: amount,
-    );
-
-    setState(() {
-      _budgets.add(newBg);
-      _saveBudget();
-      print("Budget added successfully: $newBg");
-    });
-  }
-
-  void deleteBudget(String type) async {
-    final deletedBudget = _budgets.firstWhere((budget) => budget.type == type);
-    setState(() {
-      _budgets.remove(deletedBudget);
-      _saveBudget();
-      print("Budget deleted successfully: $type");
-    });
-  }
-
-  void editBudget(String type, double amount) async {
-    final newBg = Budget(
-      type: type,
-      amount: amount,
-    );
-    setState(() {
-      _budgets.removeWhere((budget) => budget.type == type);
-      _budgets.add(newBg);
-      _saveBudget();
-      print("Budget edited successfully: $newBg");
-    });
-  }
-
-  void _showBackMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            SizedBox(width: 8),
-            Expanded(
-              child: BudgetNotification(
-                  budgets: _budgets, transactions: _transactions),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.grey[400],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        elevation: 6.0,
-        margin: EdgeInsets.all(10),
-        duration: Duration(seconds: 3),
-      ),
-    );
   }
 
   @override
