@@ -18,6 +18,7 @@ class BudgetProgressBarChart extends StatelessWidget {
       barRendererDecorator: charts.BarLabelDecorator<String>(),
       domainAxis: charts.OrdinalAxisSpec(),
       primaryMeasureAxis: charts.NumericAxisSpec(
+        viewport: charts.NumericExtents(0, 100),
         renderSpec: charts.GridlineRendererSpec(
           labelStyle: charts.TextStyleSpec(
               fontSize: 10, color: charts.MaterialPalette.black),
