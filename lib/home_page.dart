@@ -98,8 +98,9 @@ class HomePageState extends State<HomePage> {
   void editTransaction(Transaction fT) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => EditTransactionPage(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            EditTransactionPage(
           transaction: fT,
           editTransaction:
               (id, newTitle, newAmount, newCategory, newDate) async {
@@ -127,6 +128,16 @@ class HomePageState extends State<HomePage> {
             });
           },
         ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var begin = Offset(1.0, 0.0);
+          var end = Offset.zero;
+          var curve = Curves.ease;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+              position: animation.drive(tween), child: child);
+        },
+        transitionDuration: Duration(milliseconds: 450),
       ),
     ).then((_) {
       _showBackMessage();
